@@ -59,7 +59,8 @@ async function run() {
     });
     console.log(`✅ 代码已成功推送到远程仓库！`);
   } catch (err) {
-    console.warn(`⚠️ 自动推送提示:`, err.message || err);
+    console.error(`❌ 代码推送失败:`, err.message || err);
+    process.exit(1);
   }
 
   const releasesUrl = `https://api.github.com/repos/${owner}/${repoName}/releases`;
