@@ -28,6 +28,8 @@ export interface AppSettings {
   // hide the YouTube video while playing: stems are always played locally,
   // this stops streaming the video and falls back to cached thumbnails
   hideVideo: boolean
+  // preferred export format for stems: mp3 (320k ~10-15MB), m4a (256k ~8-12MB), or wav (uncompressed)
+  exportFormat?: 'mp3' | 'm4a' | 'wav'
   // anonymous usage analytics (GA4 Measurement Protocol); on by default
   analytics: boolean
 }
@@ -38,6 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   roformerVocals: false,
   gpuSplit: false,
   hideVideo: false,
+  exportFormat: 'mp3',
   analytics: true
 }
 

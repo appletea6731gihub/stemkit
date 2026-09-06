@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join, normalize, extname } from 'path'
 import { existsSync, copyFileSync, mkdirSync, createReadStream, statSync } from 'fs'
+import { spawn } from 'child_process'
 import { createServer, type Server } from 'http'
 import type { AddressInfo } from 'net'
 import type { AppSettings } from '../shared/types'
@@ -17,7 +18,9 @@ import {
   hasGpuAcceleration,
   gpuAccelerationInfo,
   engineStatus,
-  getStatus
+  getStatus,
+  venvPython,
+  convertScript
 } from './env'
 import { loadSettings, saveSettings } from './settings'
 import { loadSongs, removeSong, stemBuffers, stemsDir, stemsFor, mixWavPath } from './library'
@@ -170,18 +173,75 @@ app.whenReady().then(async () => {
   })
   ipcMain.handle('jobs:cancel', (_e, videoId?: string) => cancelJob(videoId))
 
+async function exportAudioFile(sourceWav: string, targetPath: string): Promise<void> {
+  const ext = (extname(targetPath) || '').toLowerCase().replace(/^\./, '')
+  if (ext === 'wav') {
+    copyFileSync(sourceWav, targetPath)
+    return
+  }
+
+  const py = venvPython()
+  const script = convertScript()
+  const ffmpeg = getStatus().ffmpeg.path || ''
+
+  if (existsSync(py) && existsSync(script)) {
+    await new Promise<void>((resolve, reject) => {
+      const args = [script, '--input', sourceWav, '--output', targetPath]
+      if (ffmpeg) args.push('--ffmpeg', ffmpeg)
+      const proc = spawn(py, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+      proc.on('close', (code) => {
+        if (code === 0) resolve()
+        else reject(new Error(`convert.py exited with code ${code}`))
+      })
+      proc.on('error', reject)
+    })
+    return
+  }
+
+  if (ffmpeg && existsSync(ffmpeg)) {
+    await new Promise<void>((resolve, reject) => {
+      const args = ['-y', '-i', sourceWav]
+      if (ext === 'm4a' || ext === 'aac') args.push('-c:a', 'aac', '-b:a', '256k')
+      else if (ext === 'mp3') args.push('-c:a', 'libmp3lame', '-b:a', '320k')
+      args.push(targetPath)
+      const proc = spawn(ffmpeg, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+      proc.on('close', (code) => {
+        if (code === 0) resolve()
+        else reject(new Error(`ffmpeg exited with code ${code}`))
+      })
+      proc.on('error', reject)
+    })
+    return
+  }
+
+  copyFileSync(sourceWav, targetPath)
+}
+
   ipcMain.handle('stem:export', async (_e, videoId: string, stem: string) => {
     const song = loadSongs().find((s) => s.videoId === videoId)
     const file = join(stemsDir(videoId), `${stem}.wav`)
     if (!existsSync(file)) throw new Error(`Missing stem ${stem}`)
+    const settings = loadSettings()
+    const prefFmt = settings.exportFormat || 'mp3'
+
+    const filterList = [
+      { name: 'MP3 audio (320kbps 高清压缩, 约 10-15MB)', extensions: ['mp3'] },
+      { name: 'M4A audio (256kbps 苹果高清, 约 8-12MB)', extensions: ['m4a'] },
+      { name: 'WAV audio (原始未压缩母带, 约 50MB)', extensions: ['wav'] }
+    ]
+    const sortedFilters = [
+      ...filterList.filter((f) => f.extensions.includes(prefFmt)),
+      ...filterList.filter((f) => !f.extensions.includes(prefFmt))
+    ]
+
     const result = await dialog.showSaveDialog({
       title: `Export ${stem}`,
-      defaultPath: join(app.getPath('downloads'), `${sanitizeName(song?.title ?? videoId)} - ${stem}.wav`),
-      filters: [{ name: 'WAV audio', extensions: ['wav'] }]
+      defaultPath: join(app.getPath('downloads'), `${sanitizeName(song?.title ?? videoId)} - ${stem}.${prefFmt}`),
+      filters: sortedFilters
     })
     if (result.canceled || !result.filePath) return { saved: false }
-    copyFileSync(file, result.filePath)
-    track('export', { kind: 'stem', stem })
+    await exportAudioFile(file, result.filePath)
+    track('export', { kind: 'stem', stem, ext: extname(result.filePath) })
     return { saved: true, path: result.filePath }
   })
 
@@ -192,8 +252,11 @@ app.whenReady().then(async () => {
     for (const name of list) {
       if (!existsSync(join(dir, `${name}.wav`))) throw new Error(`Missing stem ${name}`)
     }
+    const settings = loadSettings()
+    const prefFmt = settings.exportFormat || 'mp3'
+
     const result = await dialog.showOpenDialog({
-      title: 'Choose export folder',
+      title: `Choose export folder (Format: ${prefFmt.toUpperCase()})`,
       buttonLabel: 'Export Here',
       properties: ['openDirectory', 'createDirectory']
     })
@@ -201,15 +264,18 @@ app.whenReady().then(async () => {
     const target = join(result.filePaths[0], sanitizeName(song?.title ?? videoId))
     mkdirSync(target, { recursive: true })
     for (const name of list) {
-      copyFileSync(join(dir, `${name}.wav`), join(target, `${name}.wav`))
+      const srcFile = join(dir, `${name}.wav`)
+      const destFile = join(target, `${name}.${prefFmt}`)
+      await exportAudioFile(srcFile, destFile)
     }
     let count = list.length
     const mix = mixWavPath(videoId)
     if (existsSync(mix)) {
-      copyFileSync(mix, join(target, `${sanitizeName(song?.title ?? 'full track')}.wav`))
+      const destMix = join(target, `${sanitizeName(song?.title ?? 'full track')}.${prefFmt}`)
+      await exportAudioFile(mix, destMix)
       count += 1
     }
-    track('export', { kind: 'all', stems: count })
+    track('export', { kind: 'all', stems: count, format: prefFmt })
     return { saved: true, path: target, count }
   })
 

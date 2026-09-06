@@ -352,6 +352,37 @@ export function Settings({ settings, gpu, nvidiaGpu, onChange, onClose }: Props)
           </section>
 
           <section className="pt-5 border-t border-white/[0.06] space-y-5">
+            <SectionHeader label="Export" />
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium">Default export format</p>
+                <p className="text-[11.5px] text-white/40 leading-relaxed mt-0.5">
+                  MP3 320kbps delivers studio quality in a compact 10–15 MB file. Choose WAV if you require uncompressed PCM.
+                </p>
+              </div>
+              <div className="flex shrink-0 rounded-lg bg-white/[0.06] p-0.5 border border-white/[0.08]">
+                {([
+                  { v: 'mp3' as const, label: 'MP3 (10~15MB)' },
+                  { v: 'm4a' as const, label: 'M4A (8~12MB)' },
+                  { v: 'wav' as const, label: 'WAV (~50MB)' }
+                ]).map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={() => onChange({ exportFormat: opt.v })}
+                    className={`no-drag px-2.5 h-6 rounded-md text-[12px] font-semibold transition-colors ${
+                      (settings.exportFormat ?? 'mp3') === opt.v
+                        ? 'bg-white text-black'
+                        : 'text-white/45 hover:text-white/80'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="pt-5 border-t border-white/[0.06] space-y-5">
             <SectionHeader label="Privacy" />
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">

@@ -103,6 +103,13 @@ export function roformerScript(): string {
   return join(app.getAppPath(), 'python', 'roformer.py')
 }
 
+export function convertScript(): string {
+  if (app.isPackaged) {
+    return join(process.resourcesPath, 'python', 'convert.py')
+  }
+  return join(app.getAppPath(), 'python', 'convert.py')
+}
+
 export function modelsDir(): string {
   return join(userDataDir(), 'models')
 }

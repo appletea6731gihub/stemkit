@@ -13,22 +13,43 @@ import { execSync } from 'child_process';
 const ROOT = resolve(new URL('.', import.meta.url).pathname, '..');
 const RELEASE_DIR = join(ROOT, 'release');
 
-const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-const REPO = process.env.GITHUB_REPO;
+function getGitToken() {
+  if (process.env.GITHUB_TOKEN || process.env.GH_TOKEN) {
+    return process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  }
+  try {
+    const creds = execSync('printf "protocol=https\\nhost=github.com\\n\\n" | git credential fill', {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore']
+    });
+    const match = creds.match(/password=(.+)/);
+    if (match && match[1]) return match[1].trim();
+  } catch {}
+  return null;
+}
+
+function getGitRepo() {
+  if (process.env.GITHUB_REPO) return process.env.GITHUB_REPO;
+  try {
+    const remote = execSync('git config --get remote.origin.url', { encoding: 'utf-8' }).trim();
+    const match = remote.match(/github\.com[/:]([^/]+)\/([^/.]+)(?:\.git)?$/);
+    if (match) return `${match[1]}/${match[2]}`;
+  } catch {}
+  return 'appletea6731gihub/stemkit';
+}
+
+const TOKEN = getGitToken();
+const REPO = getGitRepo();
 const TAG = process.argv[2] || 'v0.1.18';
 
 if (!TOKEN || !REPO) {
   console.log(`
-❌ 缺少必要环境变量！
+❌ 缺少必要环境变量或无法从 Git 凭据提取 Token！
 
 使用方法:
   export GITHUB_TOKEN="ghp_你的GitHubToken"
-  export GITHUB_REPO="你的用户名/仓库名"   # 例如: myname/stemkit
+  export GITHUB_REPO="你的用户名/仓库名"   # 例如: appletea6731gihub/stemkit
   node scripts/publish-github-release.mjs ${TAG}
-
-如何获取 GitHub Token (30秒):
-  1. 打开 https://github.com/settings/tokens/new
-  2. 勾选 'repo' 权限，生成 Token 即可。
 `);
   process.exit(1);
 }
@@ -75,10 +96,23 @@ async function run() {
   };
 
   let release = null;
+  const releaseName = `StemKit ${TAG} (macOS Apple Silicon & Windows x64 官方稳定版)`;
+  const releaseBody = `### StemKit ${TAG} 官方发布说明\n\n` +
+    `- 🚀 **突破 YouTube 防爬机制**：深度集成 Node.js 解密运行时与静默浏览器会话穿透，彻底解决 \`Sign in to confirm you're not a bot\` 报错\n` +
+    `- 🎛️ **默认 6 音轨工业级分离**：人声 (Vocals)、鼓点 (Drums)、贝斯 (Bass)、吉他 (Guitar)、钢琴 (Piano)、其他伴奏 (Other)\n` +
+    `- 🍏 **macOS Apple Silicon 原生优化**：M1 / M2 / M3 / M4 芯片 MPS 硬件加速，原生 arm64 FFmpeg n9.0\n` +
+    `- 🪟 **Windows x64 全架构支持**：NSIS 一键静默安装向导与便携绿色版，自动适配 GPU / CPU\n` +
+    `- 🔄 **内置全自动增量升级**：对接 Cloudflare CDN 与 GitHub Releases，开箱即用\n`;
+
   const getRes = await fetch(`${releasesUrl}/tags/${TAG}`, { headers });
   if (getRes.ok) {
     release = await getRes.json();
     console.log(`✅ 已找到现有 Release (${release.name || TAG})，ID: ${release.id}`);
+    await fetch(`${releasesUrl}/${release.id}`, {
+      method: 'PATCH',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: releaseName, body: releaseBody })
+    });
   } else {
     console.log(`📝 正在创建新 Release: ${TAG}...`);
     const createRes = await fetch(releasesUrl, {
@@ -86,8 +120,8 @@ async function run() {
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tag_name: TAG,
-        name: `StemKit ${TAG} (Apple Silicon 原生 & 6音轨默认版)`,
-        body: `### StemKit ${TAG} 发布说明\n\n- 默认支持 **6 音轨** 分离（人声、鼓点、贝斯、吉他、钢琴、其他伴奏）\n- 纯本地 Apple Silicon M 系列芯片 MPS 硬件加速\n- 内置原生 arm64 FFmpeg n9.0，彻底消除架构报错\n- 支持与官方落地页无缝对接与自动升级检测`,
+        name: releaseName,
+        body: releaseBody,
         draft: false,
         prerelease: false
       })

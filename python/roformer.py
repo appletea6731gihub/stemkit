@@ -78,14 +78,16 @@ def load_wav(path):
     return audio.reshape(-1, channels).T, sr
 
 
-def save_wav_f32(path, data, sr):
-    """write a 32-bit float wav (fmt tag 3); values above 1.0 are preserved"""
+def save_wav_s16(path, data, sr):
+    """write a 16-bit PCM wav (fmt tag 1); saves 50% disk space, universally compatible"""
     channels, _ = data.shape
-    payload = data.T.astype("<f4").tobytes()
-    block_align = channels * 4
+    clipped = np.clip(data, -1.0, 1.0)
+    i16 = (clipped * 32767.0).astype("<i2")
+    payload = i16.T.tobytes()
+    block_align = channels * 2
     header = b"RIFF" + struct.pack("<I", 36 + len(payload)) + b"WAVE"
     header += b"fmt " + struct.pack(
-        "<IHHIIHH", 16, 3, channels, sr, sr * block_align, block_align, 32
+        "<IHHIIHH", 16, 1, channels, sr, sr * block_align, block_align, 16
     )
     header += b"data" + struct.pack("<I", len(payload))
     with open(path, "wb") as f:
@@ -281,7 +283,7 @@ def main():
     if np.isnan(vocals).any():
         fail("separation produced invalid audio")
     os.makedirs(args.out, exist_ok=True)
-    save_wav_f32(os.path.join(args.out, "vocals.wav"), vocals, sr)
+    save_wav_s16(os.path.join(args.out, "vocals.wav"), vocals, sr)
     emit(type="stem", name="vocals")
     emit(
         type="done",
