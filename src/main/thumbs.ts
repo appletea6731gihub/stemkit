@@ -25,26 +25,44 @@ function toDataUrl(buf: Buffer): string {
   return `data:image/jpeg;base64,${buf.toString('base64')}`
 }
 
+async function fetchBestThumb(videoId: string, customUrl?: string): Promise<Buffer | null> {
+  const urls: string[] = []
+  if (typeof customUrl === 'string' && /^https:\/\//.test(customUrl)) {
+    urls.push(customUrl)
+  }
+  urls.push(
+    `${YT_THUMB_URL}${videoId}/maxresdefault.jpg`,
+    `${YT_THUMB_URL}${videoId}/hqdefault.jpg`,
+    `${YT_THUMB_URL}${videoId}/mqdefault.jpg`
+  )
+
+  for (const url of urls) {
+    try {
+      const res = await net.fetch(url, { signal: AbortSignal.timeout(6000) })
+      if (res.ok) {
+        const buf = Buffer.from(await res.arrayBuffer())
+        // YouTube returns a 1097-byte transparent GIF for 404 on maxresdefault
+        if (buf.length > 2000) return buf
+      }
+    } catch {}
+  }
+  return null
+}
+
 // called from the split pipeline (metadata stage) so the cache is warm
 // before the song ever shows up in the library
 export async function cacheThumbnail(videoId: string, url?: string): Promise<void> {
   if (!VALID_ID.test(videoId)) return
   const file = thumbPath(videoId)
   if (existsSync(file)) return
-  const source = typeof url === 'string' && /^https:\/\//.test(url) ? url : `${YT_THUMB_URL}${videoId}/mqdefault.jpg`
-  try {
-    const res = await net.fetch(source, { signal: AbortSignal.timeout(10000) })
-    if (!res.ok) return
-    const buf = Buffer.from(await res.arrayBuffer())
-    if (buf.length === 0) return
-    mkdirSync(thumbsDir(), { recursive: true })
-    writeFileSync(file, buf)
-    memo.delete(videoId)
-  } catch {}
+  const buf = await fetchBestThumb(videoId, url)
+  if (!buf) return
+  mkdirSync(thumbsDir(), { recursive: true })
+  writeFileSync(file, buf)
+  memo.delete(videoId)
 }
 
-// resolves to a data URL from the local cache. When the "hide video" setting
-// is on, nothing is fetched online — missing thumbs just stay placeholders
+// resolves to a data URL from the local cache or fetches online
 export function getThumb(videoId: string): Promise<string | null> {
   if (!VALID_ID.test(videoId)) return Promise.resolve(null)
   let p = memo.get(videoId)
@@ -56,20 +74,11 @@ export function getThumb(videoId: string): Promise<string | null> {
         return toDataUrl(readFileSync(file))
       } catch {}
     }
-    if (loadSettings().hideVideo) return null
-    try {
-      const res = await net.fetch(`${YT_THUMB_URL}${videoId}/mqdefault.jpg`, {
-        signal: AbortSignal.timeout(10000)
-      })
-      if (!res.ok) return null
-      const buf = Buffer.from(await res.arrayBuffer())
-      if (buf.length === 0) return null
-      mkdirSync(thumbsDir(), { recursive: true })
-      writeFileSync(file, buf)
-      return toDataUrl(buf)
-    } catch {
-      return null
-    }
+    const buf = await fetchBestThumb(videoId)
+    if (!buf) return null
+    mkdirSync(thumbsDir(), { recursive: true })
+    writeFileSync(file, buf)
+    return toDataUrl(buf)
   })()
   memo.set(videoId, p)
   return p

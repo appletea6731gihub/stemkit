@@ -7,7 +7,7 @@ import { Thumb } from '../lib/thumbs'
 import { YouTubeHost, type YTState } from '../lib/youtube'
 import { StemLane } from './StemLane'
 import { Transport, type PresetId } from './Transport'
-import { DownloadIcon } from './Icons'
+import { DownloadIcon, ExternalIcon } from './Icons'
 
 type BufferCacheMap = BufferMap
 
@@ -34,7 +34,6 @@ interface Props {
 }
 
 export function Player({ song, settings }: Props): React.ReactElement {
-  const containerRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<YouTubeHost | null>(null)
   const posRef = useRef(0)
   const playingRef = useRef(false)
@@ -111,37 +110,8 @@ export function Player({ song, settings }: Props): React.ReactElement {
   }, [song.videoId])
 
   useEffect(() => {
-    if (hideVideo) {
-      hostRef.current?.destroy()
-      hostRef.current = null
-      setYtReady(false)
-      return
-    }
-    if (decoding || decodeError || hostRef.current) return
-    let disposed = false
-    const container = containerRef.current
-    if (!container) return
-
-    const host = new YouTubeHost()
-    hostRef.current = host
-    void host
-      .mount(container, song.videoId, (state: YTState) => {
-        if (disposed || !engine.hasBuffers()) return
-        if (state === 'playing') {
-          videoSyncAtRef.current = 0
-          if (!playingRef.current) {
-            host.pause()
-          }
-        }
-      })
-      .then(() => {
-        if (!disposed) setYtReady(true)
-      })
-
-    return () => {
-      disposed = true
-    }
-  }, [song.videoId, decoding, decodeError, hideVideo])
+    setYtReady(true)
+  }, [song.videoId])
 
   useEffect(() => {
     engine.applyMix(vols, mutes, solos, master)
@@ -307,15 +277,42 @@ export function Player({ song, settings }: Props): React.ReactElement {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-stretch gap-4 h-[220px]">
             {!hideVideo && (
-              <div className="relative w-[391px] shrink-0">
-                <div className="absolute -inset-4 bg-violet-500/10 blur-3xl rounded-full pointer-events-none" />
-                <div className="absolute inset-0 rounded-xl overflow-hidden ring-1 ring-white/10 bg-black shadow-2xl shadow-black/60">
-                  <div ref={containerRef} className="absolute inset-0 [&_iframe]:w-full [&_iframe]:h-full" />
-                  {!ytReady && (
-                    <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                      <span className="text-[10px] text-white/40 tracking-widest uppercase">loading…</span>
-                    </div>
-                  )}
+              <div className="relative w-[391px] shrink-0 group">
+                <div className="absolute -inset-4 bg-violet-500/15 blur-3xl rounded-full pointer-events-none" />
+                <div className="absolute inset-0 rounded-2xl overflow-hidden ring-1 ring-white/10 bg-black/60 shadow-2xl shadow-black/60 flex items-center justify-center">
+                  <Thumb
+                    videoId={song.videoId}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30 pointer-events-none" />
+
+                  {/* Status badge in bottom left */}
+                  <div className="absolute bottom-3.5 left-3.5 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg pointer-events-none">
+                    {playing ? (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[12px] font-medium text-white/90">正在播放 · 6 音轨</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-white/40" />
+                        <span className="text-[12px] font-medium text-white/65">就绪 · 6 音轨</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Open in YouTube button top right */}
+                  <button
+                    onClick={() => {
+                      void window.stemkit.openExternal(`https://www.youtube.com/watch?v=${song.videoId}`)
+                    }}
+                    className="no-drag absolute top-3.5 right-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/10 text-white/70 hover:text-white text-[11px] font-medium transition-all shadow-md opacity-80 hover:opacity-100"
+                    title="在 YouTube 中打开原视频"
+                  >
+                    <ExternalIcon className="w-3.5 h-3.5" />
+                    <span>YouTube</span>
+                  </button>
+
                   {decodeError && (
                     <div className="absolute inset-x-3 bottom-3 flex justify-center rise-in">
                       <div className="glass rounded-lg px-3 py-1.5 text-xs text-rose-300 break-words">
@@ -329,10 +326,12 @@ export function Player({ song, settings }: Props): React.ReactElement {
 
             <aside className="flex-1 min-w-0 glass rounded-2xl px-6 py-5 rise-in flex flex-col justify-between">
               <div className="flex items-center gap-4">
-                <Thumb
-                  videoId={song.videoId}
-                  className="w-32 h-[72px] rounded-lg object-cover bg-white/5 shrink-0 block"
-                />
+                {hideVideo && (
+                  <Thumb
+                    videoId={song.videoId}
+                    className="w-32 h-[72px] rounded-lg object-cover bg-white/5 shrink-0 block"
+                  />
+                )}
                 <div className="min-w-0 flex-1">
                   <h3 className="text-xl font-semibold leading-snug truncate">{song.title}</h3>
                   <p className="text-xs text-white/45 mt-1.5 font-mono truncate">
