@@ -1,10 +1,11 @@
 export type StemId = 'vocals' | 'drums' | 'bass' | 'other' | 'piano' | 'guitar'
 
-export const DEFAULT_STEMS: string[] = ['vocals', 'drums', 'bass', 'other']
+export const DEFAULT_STEMS: StemId[] = ['vocals', 'drums', 'bass', 'guitar', 'piano', 'other']
 
-// roformer_hybrid = mel-band roformer vocals + htdemucs drums/bass/other
-export const MODEL_DEFAULT = 'roformer_hybrid'
+// htdemucs_6s = 6 stems (vocals, drums, bass, guitar, piano, other)
+export const MODEL_DEFAULT = 'htdemucs_6s'
 export const MODEL_EXTENDED = 'htdemucs_6s'
+export const MODEL_STUDIO = 'roformer_hybrid'
 
 export interface Song {
   videoId: string

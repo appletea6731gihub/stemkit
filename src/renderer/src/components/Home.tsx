@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   MODEL_DEFAULT,
   MODEL_EXTENDED,
+  MODEL_STUDIO,
   DEFAULT_STEMS,
   type AppSettings,
   type SearchResult,
@@ -44,7 +45,11 @@ export function Home({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const usesExtended = [...selected].some((id) => id === 'guitar' || id === 'piano')
-  const derivedModel = usesExtended ? MODEL_EXTENDED : MODEL_DEFAULT
+  const derivedModel = usesExtended
+    ? MODEL_EXTENDED
+    : settings?.roformerVocals
+      ? MODEL_STUDIO
+      : 'htdemucs'
   const orderedSelection = ALL_STEMS.filter((id) => selected.has(id))
   // the fine-tuned engine only covers the standard 4-stem split; guitar and
   // piano always run through the 6-source engine, so they're unavailable

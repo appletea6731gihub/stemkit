@@ -201,6 +201,54 @@
       .hero { padding-top: 56px; }
       section { padding-top: 84px; }
     }
+
+    .lang-toggle {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lang-toggle:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+    .plat-pills {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .pill-link:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-1px);
+    }
+    .pill-link svg { width: 13px; height: 13px; }
   </style>
 </head>
 <body>
@@ -211,11 +259,12 @@
         <span>StemKit</span>
       </a>
       <div class="right">
-        <a class="gh" href="https://github.com/danvelope/stemkit" target="_blank" rel="noopener" data-ga="github">
+        <button id="lang-btn" class="lang-toggle" onclick="toggleLang()">🌐 中文 / EN</button>
+        <a class="gh" href="https://github.com/appletea6731gihub/stemkit" target="_blank" rel="noopener" data-ga="github">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
           GitHub
         </a>
-        <a href="https://github.com/danvelope/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">Releases</a>
+        <a href="https://github.com/appletea6731gihub/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">Releases</a>
       </div>
     </nav>
 
@@ -228,14 +277,25 @@
         <i class="feather" style="--c: #34d399; top: 70%; left: -34%; width: 820px; height: 12px; opacity: 0.45; transform: rotate(7deg);"></i>
         <i class="feather" style="--c: #a78bfa; top: 86%; right: -24%; width: 720px; height: 8px; opacity: 0.35; transform: rotate(-5deg);"></i>
       </div>
-      <h1>Split songs from YouTube into <span class="grad">stems</span>.</h1>
-      <p class="sub">Paste a link, pick your instruments, and play vocals, drums, bass, guitar and piano as synced tracks. Free and open source. Runs entirely on your machine.</p>
+      <h1 id="hero-title">Split songs from YouTube into <span class="grad">stems</span>.</h1>
+      <p class="sub" id="hero-sub">Paste a link, pick your instruments, and play vocals, drums, bass, guitar and piano as synced tracks. Free and open source. Runs entirely on your machine.</p>
       <div class="cta">
-        <a class="btn-dl" id="dl" href="https://github.com/danvelope/stemkit/releases/latest" data-ga="download">
+        <a class="btn-dl" id="dl" href="https://github.com/appletea6731gihub/stemkit/releases/latest" data-ga="download">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span id="dl-label">Download</span>
         </a>
-        <a class="btn-ghost" href="https://github.com/danvelope/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">All releases</a>
+        <a class="btn-ghost" id="all-rel" href="https://github.com/appletea6731gihub/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">All releases</a>
+      </div>
+      <div class="plat-pills">
+        <a class="pill-link" id="mac-link" href="https://github.com/appletea6731gihub/stemkit/releases/latest" title="macOS Apple Silicon (M1/M2/M3/M4)">
+          🍏 macOS (Apple Silicon .dmg)
+        </a>
+        <a class="pill-link" id="win-link" href="https://github.com/appletea6731gihub/stemkit/releases/latest" title="Windows 10/11 64-bit Installer">
+          🪟 Windows (.exe)
+        </a>
+        <a class="pill-link" id="zip-link" href="https://github.com/appletea6731gihub/stemkit/releases/latest" title="Portable ZIP Package">
+          📦 Portable (.zip)
+        </a>
       </div>
       <p class="dl-cap" id="dl-cap">fetching the latest release…</p>
     </header>
@@ -362,11 +422,11 @@
     <div class="end">
       <h2>Free and open source. Runs entirely on your machine.</h2>
       <div class="cta">
-        <a class="btn-dl" id="dl2" href="https://github.com/danvelope/stemkit/releases/latest" data-ga="download">
+        <a class="btn-dl" id="dl2" href="https://github.com/appletea6731gihub/stemkit/releases/latest" data-ga="download">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span id="dl2-label">Download</span>
         </a>
-        <a class="btn-ghost" href="https://github.com/danvelope/stemkit" target="_blank" rel="noopener" data-ga="github">Star on GitHub</a>
+        <a class="btn-ghost" href="https://github.com/appletea6731gihub/stemkit" target="_blank" rel="noopener" data-ga="github">Star on GitHub</a>
       </div>
       <p class="caption-note">no account needed · fully local processing</p>
     </div>
@@ -374,41 +434,208 @@
     <footer>
       <span class="note">© 2026 StemKit · MIT license · not affiliated with YouTube or Google</span>
       <div class="links">
-        <a href="https://github.com/danvelope/stemkit" target="_blank" rel="noopener" data-ga="github">GitHub</a>
-        <a href="https://github.com/danvelope/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">Releases</a>
-        <a href="https://github.com/danvelope/stemkit/issues" target="_blank" rel="noopener" data-ga="github">Issues</a>
+        <a href="https://github.com/appletea6731gihub/stemkit" target="_blank" rel="noopener" data-ga="github">GitHub</a>
+        <a href="https://github.com/appletea6731gihub/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">Releases</a>
+        <a href="https://github.com/appletea6731gihub/stemkit/issues" target="_blank" rel="noopener" data-ga="github">Issues</a>
       </div>
     </footer>
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
+    var currentLang = localStorage.getItem('stemkit_lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+
+    var I18N = {
+      en: {
+        toggle_btn: '🌐 中文',
+        hero_title: 'Split songs from YouTube into <span class="grad">stems</span>.',
+        hero_sub: 'Paste a link, pick your instruments, and play vocals, drums, bass, guitar and piano as synced tracks. Free and open source. Runs entirely on your machine.',
+        dl_mac: 'Download for macOS',
+        dl_win: 'Download for Windows',
+        dl_generic: 'Download StemKit',
+        all_rel: 'All releases',
+        mac_pill: '🍏 macOS (Apple Silicon .dmg)',
+        win_pill: '🪟 Windows (Installer .exe)',
+        zip_pill: '📦 Portable (.zip)',
+        how_kicker: 'How it works',
+        how_title: 'Three steps. No accounts, no uploads.',
+        step1_title: 'Paste a link, or search',
+        step1_desc: 'YouTube search is built in. Find the song without opening a browser tab, hit split, and keep working while it runs in the background.',
+        step2_title: 'Pick your instruments',
+        step2_desc: 'Standard four stems, or add guitar and piano. Only what you ask for gets produced, so the split finishes faster.',
+        step3_title: 'Play, mute, solo, export',
+        step3_desc: 'All stems stay synced to the original video. Export any of them as WAV files that drop straight into your DAW.',
+        search_kicker: 'Search',
+        search_title: 'Embedded YouTube search.',
+        search_desc: 'Type a song, click the result, and the split starts in the background. You never open a browser tab.',
+        split_kicker: 'Split',
+        split_title: 'Seamless stem splits by instrument.',
+        split_desc: 'Pick vocals, drums, bass, other, plus guitar and piano. The split runs locally with live progress, and presets isolate each instrument while the playhead keeps moving.',
+        export_kicker: 'Export',
+        export_title: 'Export straight into your DAW.',
+        export_desc: 'Every stem exports as a standard WAV file — vocals, drums, bass, guitar, piano, or the full instrumental. Drop them into Ableton, Logic, FL Studio, GarageBand. No conversion, no fuss.',
+        use1_title: 'Learn your instrument',
+        use1_desc: 'Solo the guitar, bass or piano and pick out every note by ear.',
+        use2_title: 'Play with a backing track',
+        use2_desc: 'Mute your own instrument and the band plays on without you.',
+        use3_title: 'Remix and sample',
+        use3_desc: 'Pull clean acapellas and drum loops for flips and mashups.',
+        use4_title: 'Sing / Karaoke',
+        use4_desc: 'Strip the vocals from any song and the mic is yours.',
+        req_kicker: 'System requirements',
+        req_title: 'Before you install.',
+        req_os_title: 'Operating system',
+        req_os_desc: 'macOS 12 or newer (Apple Silicon), or Windows 10 / 11',
+        req_first_title: 'First launch',
+        req_first_desc: 'StemKit sets up its own engine, about 2GB, one time. Nothing to install by hand.',
+        req_disk_title: 'Disk space',
+        req_disk_desc: 'About 2GB, downloaded once during setup.',
+        req_net_title: 'Internet',
+        req_net_desc: 'Needed to fetch songs from YouTube and for the one-time setup.',
+        end_title: 'Free and open source. Runs entirely on your machine.',
+        end_note: 'no account needed · fully local processing'
+      },
+      zh: {
+        toggle_btn: '🌐 English',
+        hero_title: '将任意 YouTube 歌曲精准拆解为<span class="grad">分轨</span>。',
+        hero_sub: '输入链接即可分离人声、鼓点、贝斯、吉他与键盘伴奏。毫秒级音画同步播放，一键消音伴奏/纯人声，完全免费开源，100% 本地运算。',
+        dl_mac: '下载 macOS 原生版',
+        dl_win: '下载 Windows 安装版',
+        dl_generic: '立即下载 StemKit',
+        all_rel: '查看全部版本',
+        mac_pill: '🍏 macOS (Apple Silicon M系列 .dmg)',
+        win_pill: '🪟 Windows 10/11 (安装包 .exe)',
+        zip_pill: '📦 免安装便携版 (.zip)',
+        how_kicker: '运作流程',
+        how_title: '极简三步。无需注册，无需上传云端。',
+        step1_title: '粘贴链接或直接搜索',
+        step1_desc: '内置 YouTube 快速检索，无需打开额外浏览器标签页，直接后台提取音视频。',
+        step2_title: '自由勾选分离乐器',
+        step2_desc: '标准 4 轨分离（人声、鼓点、贝斯、伴奏），采用 Meta Demucs / Roformer 本地模型极速运算。',
+        step3_title: '专业多轨混音、独奏与导出',
+        step3_desc: '视频画面与独立分轨毫秒级对齐。可单独静音、独奏、调节音量，或一键导出无损 WAV 文件。',
+        search_kicker: '搜索',
+        search_title: '内置 YouTube 搜索。',
+        search_desc: '输入歌名直接搜索视频，一键点击即刻在后台执行音频分离，不干扰其他创作。',
+        split_kicker: '分离',
+        split_title: '前沿 AI 本地高精分轨。',
+        split_desc: '支持人声、鼓点、贝斯及各种乐器独立轨道，实时显示百分比进度，Apple Silicon / NVIDIA GPU 硬件加速。',
+        export_kicker: '导出',
+        export_title: '一键导出至专业编曲软件 (DAW)。',
+        export_desc: '所有分轨均可直接导出为标准 32-bit / 16-bit WAV 无损音频，无缝拖入 Logic Pro、Ableton、FL Studio、剪映等工具。',
+        use1_title: '乐器演奏扒带',
+        use1_desc: '独奏吉他、贝斯或钢琴轨道，清晰听清每一个音符与和弦细节。',
+        use2_title: '乐队伴奏练习',
+        use2_desc: '静音自己的乐器轨道，让原曲其他乐手为您演奏真实伴奏。',
+        use3_title: '二次混音与采样 (Remix)',
+        use3_desc: '提取纯净清唱干音（Acapella）与专属鼓点切片，制作高质量 Mashup 与 Remix。',
+        use4_title: 'K歌与伴奏制作 (Karaoke)',
+        use4_desc: '一键抹去原唱人声，原版配器完美保留，麦克风随时就绪。',
+        req_kicker: '系统要求',
+        req_title: '安装前须知。',
+        req_os_title: '操作系统',
+        req_os_desc: 'macOS 12 或更高版本 (Apple Silicon M系列)，或 Windows 10 / 11 64位',
+        req_first_title: '首次启动',
+        req_first_desc: 'StemKit 首次启动自动初始化本地 AI 引擎（约 2GB，仅需一次），无需手动配置环境。',
+        req_disk_title: '磁盘空间',
+        req_disk_desc: '约需 2GB 空间用于存放模型权重与运行环境。',
+        req_net_title: '网络连接',
+        req_net_desc: '用于初次模型下载及获取 YouTube 音视频。',
+        end_title: '免费开源。纯本地运行，保护隐私。',
+        end_note: '无需注册账号 · 100% 本地隐私安全'
+      }
+    };
+
+    function renderI18n() {
+      var d = I18N[currentLang] || I18N.en;
+      var btn = document.getElementById('lang-btn');
+      if (btn) btn.textContent = d.toggle_btn;
+
+      var heroTitle = document.getElementById('hero-title');
+      if (heroTitle) heroTitle.innerHTML = d.hero_title;
+      var heroSub = document.getElementById('hero-sub');
+      if (heroSub) heroSub.textContent = d.hero_sub;
+
+      var allRel = document.getElementById('all-rel');
+      if (allRel) allRel.textContent = d.all_rel;
+
+      var macPill = document.getElementById('mac-link');
+      if (macPill) macPill.textContent = d.mac_pill;
+      var winPill = document.getElementById('win-link');
+      if (winPill) winPill.textContent = d.win_pill;
+      var zipPill = document.getElementById('zip-link');
+      if (zipPill) zipPill.textContent = d.zip_pill;
+    }
+
+    window.toggleLang = function () {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      localStorage.setItem('stemkit_lang', currentLang);
+      renderI18n();
+      if (window.updateDownloadLabels) window.updateDownloadLabels();
+    };
+
     (function () {
-      var REPO = 'danvelope/stemkit'
+      var REPO = 'appletea6731gihub/stemkit'
       var ua = navigator.userAgent
       var os = /Mac/i.test(ua) ? 'mac' : /Win/i.test(ua) ? 'win' : null
 
+      var isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      var fallbackMac = isLocal
+        ? './downloads/StemKit-0.1.18-mac-arm64.dmg'
+        : 'https://github.com/appletea6731gihub/stemkit/releases/download/untagged-32dfd61bd8f619d92b0a/StemKit-0.1.18-mac-arm64.dmg';
+      var fallbackWin = 'https://github.com/appletea6731gihub/stemkit/releases/download/untagged-32dfd61bd8f619d92b0a/StemKit-0.1.18-win-x64.exe';
+      var fallbackZip = isLocal
+        ? './downloads/StemKit-0.1.18-mac-arm64.zip'
+        : 'https://github.com/appletea6731gihub/stemkit/releases/download/untagged-32dfd61bd8f619d92b0a/StemKit-0.1.18-mac-arm64.zip';
+
+      var macPill = document.getElementById('mac-link');
+      if (macPill) macPill.href = fallbackMac;
+      var winPill = document.getElementById('win-link');
+      if (winPill) winPill.href = fallbackWin;
+      var zipPill = document.getElementById('zip-link');
+      if (zipPill) zipPill.href = fallbackZip;
+
+      var latestData = null;
+
+      window.updateDownloadLabels = function () {
+        var d = I18N[currentLang] || I18N.en;
+        var label = os === 'mac' ? d.dl_mac : os === 'win' ? d.dl_win : d.dl_generic;
+        ;['dl-label', 'dl2-label'].forEach(function (id) {
+          var l = document.getElementById(id);
+          if (l) l.textContent = label;
+        });
+      };
+
       function apply(release) {
+        latestData = release;
         var assets = release.assets || []
         var pick = null
         if (os === 'mac') pick = assets.find(function (a) { return a.name.endsWith('mac-arm64.dmg') })
         if (os === 'win') pick = assets.find(function (a) { return a.name.endsWith('win-x64.exe') })
-        var label = os === 'mac' ? 'Download for macOS' : os === 'win' ? 'Download for Windows' : 'Get StemKit'
-        var href = pick ? pick.browser_download_url : release.html_url
+        
+        var macAsset = assets.find(function (a) { return a.name.endsWith('mac-arm64.dmg') });
+        var winAsset = assets.find(function (a) { return a.name.endsWith('win-x64.exe') });
+        var zipAsset = assets.find(function (a) { return a.name.endsWith('mac-arm64.zip') }) || assets.find(function (a) { return a.name.endsWith('.zip') });
+
+        if (macAsset && macPill) macPill.href = macAsset.browser_download_url;
+        if (winAsset && winPill) winPill.href = winAsset.browser_download_url;
+        if (zipAsset && zipPill) zipPill.href = zipAsset.browser_download_url;
+
+        var href = pick ? pick.browser_download_url : (os === 'win' ? fallbackWin : fallbackMac);
         var cap = pick
-          ? 'StemKit ' + release.tag_name.replace(/^v/, '') + ' · ' + Math.round(pick.size / 1048576) + ' MB'
-          : release.tag_name + ' · all platforms'
+          ? 'StemKit ' + (release.tag_name ? release.tag_name.replace(/^v/, '') : '0.1.18') + ' · ' + Math.round(pick.size / 1048576) + ' MB'
+          : 'v0.1.18 · all platforms';
         ;['dl', 'dl2'].forEach(function (id) {
-          var b = document.getElementById(id)
-          if (b) b.href = href
-        })
-        ;['dl-label', 'dl2-label'].forEach(function (id) {
-          var l = document.getElementById(id)
-          if (l) l.textContent = label
-        })
-        var c = document.getElementById('dl-cap')
-        if (c) c.textContent = cap
+          var b = document.getElementById(id);
+          if (b) b.href = href;
+        });
+        window.updateDownloadLabels();
+        var c = document.getElementById('dl-cap');
+        if (c) c.textContent = cap;
       }
+
+      renderI18n();
+      window.updateDownloadLabels();
 
       fetch('https://api.github.com/repos/' + REPO + '/releases/latest', {
         headers: { Accept: 'application/vnd.github+json' }
@@ -416,23 +643,24 @@
         .then(function (r) { if (!r.ok) throw new Error('unavailable'); return r.json() })
         .then(apply)
         .catch(function () {
-          var c = document.getElementById('dl-cap')
-          if (c) c.textContent = 'grab the latest release from GitHub'
-        })
+          apply({ assets: [] });
+          var c = document.getElementById('dl-cap');
+          if (c) c.textContent = 'StemKit v0.1.18 · Apple Silicon & Windows';
+        });
 
-      if (window.lucide) lucide.createIcons()
+      if (window.lucide) lucide.createIcons();
 
       /* click tracking for GA4 */
       document.addEventListener('click', function (e) {
-        var el = e.target && e.target.closest ? e.target.closest('[data-ga]') : null
-        if (!el || typeof window.gtag !== 'function') return
+        var el = e.target && e.target.closest ? e.target.closest('[data-ga]') : null;
+        if (!el || typeof window.gtag !== 'function') return;
         gtag('event', el.getAttribute('data-ga') + '_click', {
           link_url: el.href || '',
           link_text: ((el.textContent || '').trim() || '').slice(0, 80),
           transport_type: 'beacon'
-        })
-      })
-    })()
+        });
+      });
+    })();
   </script>
 </body>
 </html>

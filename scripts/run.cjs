@@ -48,7 +48,7 @@ function findNode(requiredMajor) {
       }
     } catch {}
   } else {
-    candidates.push('/opt/homebrew/bin/node', '/usr/local/bin/node')
+    candidates.push(process.execPath, '/opt/homebrew/bin/node', '/usr/local/bin/node')
     const nvmRoot = path.join(os.homedir(), '.nvm', 'versions', 'node')
     try {
       for (const ver of fs.readdirSync(nvmRoot)) {

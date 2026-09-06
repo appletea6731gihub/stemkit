@@ -28,7 +28,7 @@ import {
   loadSongs
 } from './library'
 import type { JobEvent, JobStage } from '../shared/types'
-import { MODEL_DEFAULT, MODEL_EXTENDED, DEFAULT_STEMS } from '../shared/types'
+import { MODEL_DEFAULT, MODEL_EXTENDED, MODEL_STUDIO, DEFAULT_STEMS } from '../shared/types'
 import { parseVideoId } from '../shared/url'
 import { track } from './analytics'
 import { cacheThumbnail } from './thumbs'
@@ -111,11 +111,12 @@ export async function startJob(
   // non-default, so tags written by older versions stay cache-compatible
   const settings = loadSettings()
   const wantsVocals = !stems?.length || stems.includes('vocals')
+  const wantsExtended = stems?.some((s) => s === 'guitar' || s === 'piano')
   let engine: string
-  if (requestedModel === MODEL_EXTENDED) {
-    engine = requestedModel
-  } else if (requestedModel === MODEL_DEFAULT && settings.roformerVocals && wantsVocals) {
-    engine = MODEL_DEFAULT
+  if (requestedModel === MODEL_EXTENDED || requestedModel === 'htdemucs_6s' || wantsExtended) {
+    engine = MODEL_EXTENDED
+  } else if ((requestedModel === MODEL_STUDIO || requestedModel === 'roformer_hybrid') && settings.roformerVocals && wantsVocals) {
+    engine = MODEL_STUDIO
   } else {
     engine = settings.htdemucsFt ? 'htdemucs_ft' : 'htdemucs'
   }
@@ -230,7 +231,7 @@ export async function startJob(
       '-i',
       rawPath,
       '-af',
-      'aresample=44100:resampler=soxr',
+      'aresample=44100',
       '-ar',
       '44100',
       '-ac',
@@ -318,7 +319,7 @@ export async function startJob(
           ],
           lineParsers((pct) => pct)
         )
-      } else if (engine === MODEL_DEFAULT) {
+      } else if (engine === MODEL_STUDIO || engine === 'roformer_hybrid') {
         const otherStems = (
           stems?.length ? stems : ['drums', 'bass', 'other', 'vocals']
         ).filter((s) => s !== 'vocals')
@@ -480,7 +481,7 @@ function runProcess(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     if (job.cancelled || !jobs.has(job.videoId)) return reject(new Error('cancelled'))
-    const child = spawn(cmd, args, { env: { ...process.env } })
+    const child = spawn(cmd, args, { env: { ...process.env, PYTORCH_ENABLE_MPS_FALLBACK: '1' } })
     job.proc = child
 
     let stdoutTail = ''

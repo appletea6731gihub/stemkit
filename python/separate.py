@@ -1,9 +1,12 @@
 import argparse
 import json
+import os
 import struct
 import sys
 import time
 import wave
+
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
 import numpy as np
 
