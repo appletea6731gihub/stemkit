@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  MODEL_DEFAULT,
   MODEL_EXTENDED,
   MODEL_STUDIO,
   DEFAULT_STEMS,

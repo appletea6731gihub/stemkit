@@ -2,7 +2,6 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { net } from 'electron'
 import { userDataDir } from './env'
-import { loadSettings } from './settings'
 
 // mqdefault (320x180) covers every thumbnail slot in the app; library
 // thumbnails come from this local cache instead of i.ytimg.com once the
@@ -15,7 +14,7 @@ function thumbsDir(): string {
   return join(userDataDir(), 'thumbs')
 }
 
-function thumbPath(videoId: string): string {
+export function thumbPath(videoId: string): string {
   return join(thumbsDir(), `${videoId}.jpg`)
 }
 

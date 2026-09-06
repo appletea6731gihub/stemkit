@@ -20,6 +20,12 @@ if [[ "$OS" == "Darwin" ]]; then
   chmod +x "$OUT/ffmpeg"
   "$OUT/ffmpeg" -version | head -1
   echo "saved to $OUT/ffmpeg"
+
+  if [[ ! -x "$ROOT/extras/setfileicon" ]] && [[ -f "$ROOT/scripts/setfileicon.swift" ]]; then
+    echo "compiling setfileicon..."
+    swiftc -O "$ROOT/scripts/setfileicon.swift" -o "$ROOT/extras/setfileicon"
+    chmod +x "$ROOT/extras/setfileicon"
+  fi
 elif [[ "$OS" == "MINGW"* || "$OS" == "MSYS"* || "$OS" == "CYGWIN"* ]]; then
   echo "on Windows, run instead: powershell -ExecutionPolicy Bypass -File scripts/fetch-ffmpeg.ps1"
   exit 1

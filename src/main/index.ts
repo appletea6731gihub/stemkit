@@ -20,7 +20,8 @@ import {
   engineStatus,
   getStatus,
   venvPython,
-  convertScript
+  convertScript,
+  applyFileIcon
 } from './env'
 import { loadSettings, saveSettings } from './settings'
 import { loadSongs, removeSong, stemBuffers, stemsDir, stemsFor, mixWavPath } from './library'
@@ -28,7 +29,7 @@ import { startJob, cancelJob, searchYouTube } from './pipeline'
 import { initUpdater } from './updater'
 import { runSmoke } from './smoke'
 import { track, trackFromRenderer } from './analytics'
-import { getThumb, clearThumbMemo } from './thumbs'
+import { getThumb, clearThumbMemo, thumbPath } from './thumbs'
 
 let mainWindow: BrowserWindow | null = null
 let staticServer: Server | null = null
@@ -173,10 +174,17 @@ app.whenReady().then(async () => {
   })
   ipcMain.handle('jobs:cancel', (_e, videoId?: string) => cancelJob(videoId))
 
-async function exportAudioFile(sourceWav: string, targetPath: string): Promise<void> {
+async function exportAudioFile(
+  sourceWav: string,
+  targetPath: string,
+  options?: { coverPath?: string; title?: string; artist?: string }
+): Promise<void> {
   const ext = (extname(targetPath) || '').toLowerCase().replace(/^\./, '')
   if (ext === 'wav') {
     copyFileSync(sourceWav, targetPath)
+    if (options?.coverPath) {
+      applyFileIcon(options.coverPath, targetPath)
+    }
     return
   }
 
@@ -188,6 +196,12 @@ async function exportAudioFile(sourceWav: string, targetPath: string): Promise<v
     await new Promise<void>((resolve, reject) => {
       const args = [script, '--input', sourceWav, '--output', targetPath]
       if (ffmpeg) args.push('--ffmpeg', ffmpeg)
+      if (options?.coverPath && existsSync(options.coverPath)) {
+        args.push('--cover', options.coverPath)
+      }
+      if (options?.title) args.push('--title', options.title)
+      if (options?.artist) args.push('--artist', options.artist)
+
       const proc = spawn(py, args, { stdio: ['ignore', 'pipe', 'pipe'] })
       proc.on('close', (code) => {
         if (code === 0) resolve()
@@ -195,14 +209,28 @@ async function exportAudioFile(sourceWav: string, targetPath: string): Promise<v
       })
       proc.on('error', reject)
     })
+    if (options?.coverPath) {
+      applyFileIcon(options.coverPath, targetPath)
+    }
     return
   }
 
   if (ffmpeg && existsSync(ffmpeg)) {
     await new Promise<void>((resolve, reject) => {
       const args = ['-y', '-i', sourceWav]
-      if (ext === 'm4a' || ext === 'aac') args.push('-c:a', 'aac', '-b:a', '256k')
-      else if (ext === 'mp3') args.push('-c:a', 'libmp3lame', '-b:a', '320k')
+      if (options?.coverPath && existsSync(options.coverPath)) {
+        args.push('-i', options.coverPath, '-map', '0:0', '-map', '1:0')
+        if (ext === 'm4a' || ext === 'aac') {
+          args.push('-c:a', 'aac', '-b:a', '256k', '-c:v', 'copy', '-disposition:v:0', 'attached_pic')
+        } else if (ext === 'mp3') {
+          args.push('-c:a', 'libmp3lame', '-b:a', '320k', '-c:v', 'copy', '-id3v2_version', '3')
+        }
+      } else {
+        if (ext === 'm4a' || ext === 'aac') args.push('-c:a', 'aac', '-b:a', '256k')
+        else if (ext === 'mp3') args.push('-c:a', 'libmp3lame', '-b:a', '320k')
+      }
+      if (options?.title) args.push('-metadata', `title=${options.title}`)
+      if (options?.artist) args.push('-metadata', `artist=${options.artist}`)
       args.push(targetPath)
       const proc = spawn(ffmpeg, args, { stdio: ['ignore', 'pipe', 'pipe'] })
       proc.on('close', (code) => {
@@ -211,10 +239,16 @@ async function exportAudioFile(sourceWav: string, targetPath: string): Promise<v
       })
       proc.on('error', reject)
     })
+    if (options?.coverPath) {
+      applyFileIcon(options.coverPath, targetPath)
+    }
     return
   }
 
   copyFileSync(sourceWav, targetPath)
+  if (options?.coverPath) {
+    applyFileIcon(options.coverPath, targetPath)
+  }
 }
 
   ipcMain.handle('stem:export', async (_e, videoId: string, stem: string) => {
@@ -240,7 +274,13 @@ async function exportAudioFile(sourceWav: string, targetPath: string): Promise<v
       filters: sortedFilters
     })
     if (result.canceled || !result.filePath) return { saved: false }
-    await exportAudioFile(file, result.filePath)
+    const coverFile = thumbPath(videoId)
+    const cover = existsSync(coverFile) ? coverFile : undefined
+    await exportAudioFile(file, result.filePath, {
+      coverPath: cover,
+      title: `${song?.title ?? videoId} (${stem})`,
+      artist: song?.title ?? 'StemKit'
+    })
     track('export', { kind: 'stem', stem, ext: extname(result.filePath) })
     return { saved: true, path: result.filePath }
   })
@@ -263,17 +303,31 @@ async function exportAudioFile(sourceWav: string, targetPath: string): Promise<v
     if (result.canceled || !result.filePaths[0]) return { saved: false }
     const target = join(result.filePaths[0], sanitizeName(song?.title ?? videoId))
     mkdirSync(target, { recursive: true })
+    const coverFile = thumbPath(videoId)
+    const cover = existsSync(coverFile) ? coverFile : undefined
+
     for (const name of list) {
       const srcFile = join(dir, `${name}.wav`)
       const destFile = join(target, `${name}.${prefFmt}`)
-      await exportAudioFile(srcFile, destFile)
+      await exportAudioFile(srcFile, destFile, {
+        coverPath: cover,
+        title: `${song?.title ?? videoId} (${name})`,
+        artist: song?.title ?? 'StemKit'
+      })
     }
     let count = list.length
     const mix = mixWavPath(videoId)
     if (existsSync(mix)) {
       const destMix = join(target, `${sanitizeName(song?.title ?? 'full track')}.${prefFmt}`)
-      await exportAudioFile(mix, destMix)
+      await exportAudioFile(mix, destMix, {
+        coverPath: cover,
+        title: song?.title ?? 'Full Track',
+        artist: song?.title ?? 'StemKit'
+      })
       count += 1
+    }
+    if (cover) {
+      applyFileIcon(cover, target)
     }
     track('export', { kind: 'all', stems: count, format: prefFmt })
     return { saved: true, path: target, count }

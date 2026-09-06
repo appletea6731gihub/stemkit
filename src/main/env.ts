@@ -1,4 +1,4 @@
-import { spawn, execFile } from 'child_process'
+import { spawn, execFile, execFileSync, execSync } from 'child_process'
 import { existsSync, writeFileSync, readdirSync, createWriteStream, mkdirSync, chmodSync, unlinkSync, statSync, renameSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
@@ -108,6 +108,32 @@ export function convertScript(): string {
     return join(process.resourcesPath, 'python', 'convert.py')
   }
   return join(app.getAppPath(), 'python', 'convert.py')
+}
+
+export function setFileIconTool(): string | null {
+  if (process.platform !== 'darwin') return null
+  if (app.isPackaged) {
+    const p = join(process.resourcesPath, 'setfileicon')
+    if (existsSync(p)) return p
+  }
+  const local = join(app.getAppPath(), 'extras', 'setfileicon')
+  if (existsSync(local)) return local
+  return null
+}
+
+export function applyFileIcon(imagePath: string, targetPath: string): void {
+  if (process.platform !== 'darwin' || !existsSync(imagePath) || !existsSync(targetPath)) return
+  const tool = setFileIconTool()
+  if (tool && existsSync(tool)) {
+    try {
+      execFileSync(tool, [imagePath, targetPath], { stdio: 'ignore' })
+      return
+    } catch {}
+  }
+  try {
+    const cmd = `swift -e 'import Cocoa; if let img = NSImage(contentsOfFile: "${imagePath.replace(/"/g, '\\"')}") { _ = NSWorkspace.shared.setIcon(img, forFile: "${targetPath.replace(/"/g, '\\"')}", options: []) }'`
+    execSync(cmd, { stdio: 'ignore' })
+  } catch {}
 }
 
 export function modelsDir(): string {

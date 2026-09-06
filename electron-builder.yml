@@ -26,6 +26,8 @@ mac:
   extraResources:
     - from: extras/ffmpeg-mac/ffmpeg
       to: ffmpeg/ffmpeg
+    - from: extras/setfileicon
+      to: setfileicon
 win:
   icon: build/icon.png
   target:

@@ -112,6 +112,9 @@ def main():
     parser = argparse.ArgumentParser(description="StemKit Audio Converter")
     parser.add_argument("--input", required=True, help="Path to input WAV")
     parser.add_argument("--output", required=True, help="Path to output audio")
+    parser.add_argument("--cover", default="", help="Optional path to cover art image")
+    parser.add_argument("--title", default="", help="Optional track title")
+    parser.add_argument("--artist", default="", help="Optional artist name")
     parser.add_argument("--ffmpeg", default="", help="Optional path to ffmpeg binary")
     parser.add_argument("--bitrate", type=int, default=320, help="Bitrate in kbps")
     args = parser.parse_args()
@@ -130,7 +133,31 @@ def main():
     if ext == ".mp3":
         try:
             data, sr, channels = read_audio_data(in_path)
-            convert_to_mp3_lame(data, sr, channels, out_path, bitrate=args.bitrate)
+            has_cover = bool(args.cover and os.path.exists(args.cover))
+            raw_mp3 = f"{out_path}.raw.mp3" if has_cover else out_path
+            convert_to_mp3_lame(data, sr, channels, raw_mp3, bitrate=args.bitrate)
+
+            if has_cover:
+                ffmpeg_bin = args.ffmpeg or "ffmpeg"
+                cmd = [
+                    ffmpeg_bin, "-y", "-i", raw_mp3, "-i", args.cover,
+                    "-map", "0:0", "-map", "1:0",
+                    "-c", "copy", "-id3v2_version", "3",
+                    "-metadata:s:v", "title=Album cover",
+                    "-metadata:s:v", "comment=Cover (front)"
+                ]
+                if args.title:
+                    cmd.extend(["-metadata", f"title={args.title}"])
+                if args.artist:
+                    cmd.extend(["-metadata", f"artist={args.artist}"])
+                cmd.append(out_path)
+                try:
+                    subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    if os.path.exists(raw_mp3):
+                        os.remove(raw_mp3)
+                except Exception:
+                    if os.path.exists(raw_mp3) and not os.path.exists(out_path):
+                        os.rename(raw_mp3, out_path)
             return
         except Exception as e:
             # Fallback to ffmpeg if available
@@ -139,13 +166,34 @@ def main():
                 return
             raise e
 
-    # 2. M4A / AAC / FLAC conversion
-    if ext in [".m4a", ".aac", ".flac"]:
+    # 2. M4A / AAC conversion
+    if ext in [".m4a", ".aac"]:
+        ffmpeg_bin = args.ffmpeg or "ffmpeg"
+        cmd = [ffmpeg_bin, "-y", "-i", in_path]
+        if args.cover and os.path.exists(args.cover):
+            cmd.extend([
+                "-i", args.cover,
+                "-map", "0:0", "-map", "1:0",
+                "-c:a", "aac", "-b:a", "256k",
+                "-c:v", "copy", "-disposition:v:0", "attached_pic"
+            ])
+        else:
+            cmd.extend(["-c:a", "aac", "-b:a", "256k"])
+        if args.title:
+            cmd.extend(["-metadata", f"title={args.title}"])
+        if args.artist:
+            cmd.extend(["-metadata", f"artist={args.artist}"])
+        cmd.append(out_path)
+        subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
+
+    # 3. FLAC conversion
+    if ext == ".flac":
         ffmpeg_bin = args.ffmpeg or "ffmpeg"
         convert_with_ffmpeg(ffmpeg_bin, in_path, out_path, ext)
         return
 
-    # 3. WAV conversion (standardize to 16-bit PCM)
+    # 4. WAV conversion (standardize to 16-bit PCM)
     if ext == ".wav":
         data, sr, channels = read_audio_data(in_path)
         convert_to_wav_s16(data, sr, channels, out_path)

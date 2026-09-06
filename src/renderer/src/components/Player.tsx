@@ -4,7 +4,7 @@ import { engine, decodePayload, type BufferMap } from '../lib/engine'
 import { buildStemMeta } from '../lib/stems'
 import { fmtTime } from '../lib/format'
 import { Thumb } from '../lib/thumbs'
-import { YouTubeHost, type YTState } from '../lib/youtube'
+import { YouTubeHost } from '../lib/youtube'
 import { StemLane } from './StemLane'
 import { Transport, type PresetId } from './Transport'
 import { DownloadIcon, ExternalIcon } from './Icons'
@@ -42,7 +42,7 @@ export function Player({ song, settings }: Props): React.ReactElement {
   const VIDEO_DRIFT_LIMIT = 0.4
   const VIDEO_RESYNC_COOLDOWN = 2000
 
-  const [ytReady, setYtReady] = useState(false)
+  const [, setYtReady] = useState(false)
   const [decoding, setDecoding] = useState(true)
   const [decodeError, setDecodeError] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
