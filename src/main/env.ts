@@ -252,8 +252,24 @@ async function detectJsRuntime(): Promise<void> {
       }
     } catch {}
   } else {
-    nodeCandidates.push('/opt/homebrew/bin/node', '/usr/local/bin/node')
-    const nvmRoot = join(homedir(), '.nvm/versions/node')
+    const home = homedir()
+    nodeCandidates.push(
+      '/opt/homebrew/bin/node',
+      '/usr/local/bin/node',
+      join(home, '.local/bin/node'),
+      join(home, 'bin/node')
+    )
+    try {
+      if (process.env.PATH) {
+        for (const dir of process.env.PATH.split(':')) {
+          const candidate = join(dir, 'node')
+          if (existsSync(candidate) && !nodeCandidates.includes(candidate)) {
+            nodeCandidates.push(candidate)
+          }
+        }
+      }
+    } catch {}
+    const nvmRoot = join(home, '.nvm/versions/node')
     try {
       for (const ver of readdirSync(nvmRoot)) {
         const major = parseInt(cleanVersion(ver).split('.')[0], 10)
@@ -279,6 +295,60 @@ async function detectJsRuntime(): Promise<void> {
   if (best) state.jsRuntime = { kind: 'node', path: best.path }
 }
 
+export function detectBrowserCookies(): string | null {
+  const home = homedir()
+  const candidates: { browser: string; paths: string[] }[] = IS_WIN
+    ? [
+        {
+          browser: 'chrome',
+          paths: [
+            join(process.env.LOCALAPPDATA ?? '', 'Google/Chrome/User Data/Default/Network/Cookies'),
+            join(process.env.LOCALAPPDATA ?? '', 'Google/Chrome/User Data/Default/Cookies')
+          ]
+        },
+        {
+          browser: 'edge',
+          paths: [
+            join(process.env.LOCALAPPDATA ?? '', 'Microsoft/Edge/User Data/Default/Network/Cookies')
+          ]
+        },
+        {
+          browser: 'brave',
+          paths: [
+            join(process.env.LOCALAPPDATA ?? '', 'BraveSoftware/Brave-Browser/User Data/Default/Network/Cookies')
+          ]
+        }
+      ]
+    : [
+        {
+          browser: 'chrome',
+          paths: [
+            join(home, 'Library/Application Support/Google/Chrome/Default/Cookies'),
+            join(home, 'Library/Application Support/Google/Chrome/Profile 1/Cookies')
+          ]
+        },
+        {
+          browser: 'edge',
+          paths: [
+            join(home, 'Library/Application Support/Microsoft Edge/Default/Cookies')
+          ]
+        },
+        {
+          browser: 'brave',
+          paths: [
+            join(home, 'Library/Application Support/BraveSoftware/Brave-Browser/Default/Cookies')
+          ]
+        }
+      ]
+
+  for (const { browser, paths } of candidates) {
+    if (paths.some((p) => existsSync(p))) {
+      return browser
+    }
+  }
+  return null
+}
+
 function cmpVersions(a: string, b: string): number {
   const pa = a.split('.').map(Number)
   const pb = b.split('.').map(Number)
@@ -289,8 +359,15 @@ function cmpVersions(a: string, b: string): number {
 }
 
 export function ytDlpRuntimeArgs(): string[] {
-  if (!state.jsRuntime) return []
-  return ['--js-runtimes', `${state.jsRuntime.kind}:${state.jsRuntime.path}`]
+  const args: string[] = []
+  if (state.jsRuntime) {
+    args.push('--js-runtimes', `${state.jsRuntime.kind}:${state.jsRuntime.path}`)
+  }
+  const browser = detectBrowserCookies()
+  if (browser) {
+    args.push('--cookies-from-browser', browser)
+  }
+  return args
 }
 
 function pyCandidates(): string[] {

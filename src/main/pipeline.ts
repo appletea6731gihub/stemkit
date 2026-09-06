@@ -166,11 +166,27 @@ export async function startJob(
     progress(job, 'metadata', 0, 'Reading video info')
 
     let raw = ''
-    await runProcess(job, venvYtDlp(), [...ytDlpRuntimeArgs(), '-J', '--no-playlist', '--skip-download', url], {
-      onStdout: (chunk) => {
-        raw += chunk
+    try {
+      await runProcess(job, venvYtDlp(), [...ytDlpRuntimeArgs(), '-J', '--no-playlist', '--skip-download', url], {
+        onStdout: (chunk) => {
+          raw += chunk
+        }
+      })
+    } catch (err) {
+      const args = ytDlpRuntimeArgs()
+      const cookieIdx = args.indexOf('--cookies-from-browser')
+      if (cookieIdx !== -1) {
+        raw = ''
+        const fallbackArgs = args.filter((_, i) => i !== cookieIdx && i !== cookieIdx + 1)
+        await runProcess(job, venvYtDlp(), [...fallbackArgs, '-J', '--no-playlist', '--skip-download', url], {
+          onStdout: (chunk) => {
+            raw += chunk
+          }
+        })
+      } else {
+        throw err
       }
-    })
+    }
     let meta: { title: string; duration: number }
     try {
       const parsed = JSON.parse(raw)
@@ -189,33 +205,48 @@ export async function startJob(
 
     progress(job, 'download', 0, 'Downloading audio from YouTube')
     let maxPct = 0
-    await runProcess(
-      job,
-      venvYtDlp(),
-      [
-        ...ytDlpRuntimeArgs(),
-        '-f',
-        'bestaudio/best',
-        '--no-playlist',
-        '-o',
-        rawDownloadPath(videoId),
-        url
-      ],
-      {
-        onStdout: (chunk) => {
-          for (const piece of chunk.split(/[\r\n]/)) {
-            const m = piece.match(/(\d+(?:\.\d+)?)%/)
-            if (m) {
-              const pct = parseFloat(m[1])
-              if (pct > maxPct && pct <= 100) {
-                maxPct = pct
-                progress(job, 'download', pct)
+    const executeDownload = async (runtimeArgs: string[]): Promise<void> => {
+      await runProcess(
+        job,
+        venvYtDlp(),
+        [
+          ...runtimeArgs,
+          '-f',
+          'bestaudio/best',
+          '--no-playlist',
+          '-o',
+          rawDownloadPath(videoId),
+          url
+        ],
+        {
+          onStdout: (chunk) => {
+            for (const piece of chunk.split(/[\r\n]/)) {
+              const m = piece.match(/(\d+(?:\.\d+)?)%/)
+              if (m) {
+                const pct = parseFloat(m[1])
+                if (pct > maxPct && pct <= 100) {
+                  maxPct = pct
+                  progress(job, 'download', pct)
+                }
               }
             }
           }
         }
+      )
+    }
+
+    try {
+      await executeDownload(ytDlpRuntimeArgs())
+    } catch (err) {
+      const args = ytDlpRuntimeArgs()
+      const cookieIdx = args.indexOf('--cookies-from-browser')
+      if (cookieIdx !== -1) {
+        const fallbackArgs = args.filter((_, i) => i !== cookieIdx && i !== cookieIdx + 1)
+        await executeDownload(fallbackArgs)
+      } else {
+        throw err
       }
-    )
+    }
     if (job.cancelled || !jobs.has(videoId)) return
 
     const dir = songDir(videoId)
