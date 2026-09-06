@@ -30,7 +30,11 @@ win:
   icon: build/icon.png
   target:
     - target: nsis
+      arch:
+        - x64
     - target: zip
+      arch:
+        - x64
   extraResources:
     - from: extras/ffmpeg-win/ffmpeg.exe
       to: ffmpeg/ffmpeg.exe

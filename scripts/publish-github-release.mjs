@@ -44,7 +44,11 @@ const filesToUpload = [
   'StemKit-0.1.18-mac-arm64.dmg.blockmap',
   'StemKit-0.1.18-mac-arm64.zip',
   'StemKit-0.1.18-mac-arm64.zip.blockmap',
-  'latest-mac.yml'
+  'latest-mac.yml',
+  'StemKit-0.1.18-win-x64.exe',
+  'StemKit-0.1.18-win-x64.exe.blockmap',
+  'StemKit-0.1.18-win-x64.zip',
+  'latest.yml'
 ];
 
 async function run() {
