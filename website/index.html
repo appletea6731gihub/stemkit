@@ -254,7 +254,7 @@
 <body>
   <div class="wrap">
     <nav>
-      <a class="brand" href="/">
+      <a class="brand" href="/" data-i18n-title="brand_title">
         <img src="icon.png" alt="StemKit icon" />
         <span>StemKit</span>
       </a>
@@ -305,23 +305,23 @@
     </figure>
 
     <section>
-      <p class="kicker">How it works</p>
-      <h2>Three steps. No accounts, no uploads.</h2>
+      <p class="kicker" id="how-kicker">How it works</p>
+      <h2 id="how-title">Three steps. No accounts, no uploads.</h2>
       <div class="steps">
         <div class="step">
           <span class="n">01</span>
-          <h3>Paste a link, or search</h3>
-          <p>YouTube search is built in. Find the song without opening a browser tab, hit split, and keep working while it runs in the background.</p>
+          <h3 id="step1-title">Paste a link, or search</h3>
+          <p id="step1-desc">YouTube search is built in. Find the song without opening a browser tab, hit split, and keep working while it runs in the background.</p>
         </div>
         <div class="step">
           <span class="n">02</span>
-          <h3>Pick your instruments</h3>
-          <p>Standard four stems, or add guitar and piano. Only what you ask for gets produced, so the split finishes faster.</p>
+          <h3 id="step2-title">Pick your instruments</h3>
+          <p id="step2-desc">Standard four stems, or add guitar and piano. Only what you ask for gets produced, so the split finishes faster.</p>
         </div>
         <div class="step">
           <span class="n">03</span>
-          <h3>Play, mute, solo, export</h3>
-          <p>All stems stay synced to the original video. Export any of them as WAV files that drop straight into your DAW.</p>
+          <h3 id="step3-title">Play, mute, solo, export</h3>
+          <p id="step3-desc">All stems stay synced to the original video. Export any of them as WAV files that drop straight into your DAW.</p>
         </div>
       </div>
     </section>
@@ -330,13 +330,13 @@
       <div class="frow">
         <div class="txt">
           <span class="accent" style="background: #a78bfa;"></span>
-          <p class="kicker">Search</p>
-          <h2>Embedded YouTube search.</h2>
-          <p>Type a song, click the result, and the split starts in the background. You never open a browser tab.</p>
+          <p class="kicker" id="search-kicker">Search</p>
+          <h2 id="search-title">Embedded YouTube search.</h2>
+          <p id="search-desc">Type a song, click the result, and the split starts in the background. You never open a browser tab.</p>
           <ul>
-            <li>Results appear while you type</li>
-            <li>One click sends it to split</li>
-            <li>No browser tab, ever</li>
+            <li id="search-li1">Results appear while you type</li>
+            <li id="search-li2">One click sends it to split</li>
+            <li id="search-li3">No browser tab, ever</li>
           </ul>
         </div>
         <figure class="shot zoom">
@@ -349,13 +349,13 @@
       <div class="frow flip">
         <div class="txt">
           <span class="accent" style="background: #34d399;"></span>
-          <p class="kicker green">Split</p>
-          <h2>Seamless stem splits by instrument.</h2>
-          <p>Pick vocals, drums, bass, other, plus guitar and piano. The split runs locally with live progress, and presets isolate each instrument while the playhead keeps moving.</p>
+          <p class="kicker green" id="split-kicker">Split</p>
+          <h2 id="split-title">Seamless stem splits by instrument.</h2>
+          <p id="split-desc">Pick vocals, drums, bass, other, plus guitar and piano. The split runs locally with live progress, and presets isolate each instrument while the playhead keeps moving.</p>
           <ul>
-            <li>Vocals, drums, bass, other</li>
-            <li>Guitar and piano when you need them</li>
-            <li>Live progress, runs locally</li>
+            <li id="split-li1">Vocals, drums, bass, other</li>
+            <li id="split-li2">Guitar and piano when you need them</li>
+            <li id="split-li3">Live progress, runs locally</li>
           </ul>
         </div>
         <figure class="shot">
@@ -368,13 +368,13 @@
       <div class="frow">
         <div class="txt">
           <span class="accent" style="background: #fbbf24;"></span>
-          <p class="kicker amber">Export</p>
-          <h2>Export straight into your DAW.</h2>
-          <p>Every stem exports as a standard WAV file — vocals, drums, bass, guitar, piano, or the full instrumental. Drop them into Ableton, Logic, FL Studio, GarageBand. No conversion, no fuss.</p>
+          <p class="kicker amber" id="export-kicker">Export</p>
+          <h2 id="export-title">Export straight into your DAW.</h2>
+          <p id="export-desc">Every stem exports as a standard WAV file — vocals, drums, bass, guitar, piano, or the full instrumental. Drop them into Ableton, Logic, FL Studio, GarageBand. No conversion, no fuss.</p>
           <ul>
-            <li>Any stem, or all of them at once</li>
-            <li>Standard WAV files</li>
-            <li>Works with any DAW</li>
+            <li id="export-li1">Any stem, or all of them at once</li>
+            <li id="export-li2">Standard WAV files</li>
+            <li id="export-li3">Works with any DAW</li>
           </ul>
         </div>
         <figure class="shot">
@@ -387,52 +387,52 @@
       <div class="boxes">
         <div class="pbox">
           <span class="pico" style="--c: #a78bfa;"><i data-lucide="headphones"></i></span>
-          <h3>Learn your instrument</h3>
-          <p>Solo the guitar, bass or piano and pick out every note by ear.</p>
+          <h3 id="use1-title">Learn your instrument</h3>
+          <p id="use1-desc">Solo the guitar, bass or piano and pick out every note by ear.</p>
         </div>
         <div class="pbox">
           <span class="pico" style="--c: #f87171;"><i data-lucide="music"></i></span>
-          <h3>Play with a backing track</h3>
-          <p>Mute your own instrument and the band plays on without you.</p>
+          <h3 id="use2-title">Play with a backing track</h3>
+          <p id="use2-desc">Mute your own instrument and the band plays on without you.</p>
         </div>
         <div class="pbox">
           <span class="pico" style="--c: #60a5fa;"><i data-lucide="scissors"></i></span>
-          <h3>Remix and sample</h3>
-          <p>Pull clean acapellas and drum loops for flips and mashups.</p>
+          <h3 id="use3-title">Remix and sample</h3>
+          <p id="use3-desc">Pull clean acapellas and drum loops for flips and mashups.</p>
         </div>
         <div class="pbox">
           <span class="pico" style="--c: #fbbf24;"><i data-lucide="mic"></i></span>
-          <h3>Sing / Karaoke</h3>
-          <p>Strip the vocals from any song and the mic is yours.</p>
+          <h3 id="use4-title">Sing / Karaoke</h3>
+          <p id="use4-desc">Strip the vocals from any song and the mic is yours.</p>
         </div>
       </div>
     </section>
 
     <section>
-      <p class="kicker">System requirements</p>
-      <h2>Before you install.</h2>
+      <p class="kicker" id="req-kicker">System requirements</p>
+      <h2 id="req-title">Before you install.</h2>
       <div class="reqs">
-        <div class="req"><b>Operating system</b><span>macOS 12 or newer (Apple Silicon), or Windows 10 / 11</span></div>
-        <div class="req"><b>First launch</b><span>StemKit sets up its own engine, about 2GB, one time. Nothing to install by hand.</span></div>
-        <div class="req"><b>Disk space</b><span>About 2GB, downloaded once during setup.</span></div>
-        <div class="req"><b>Internet</b><span>Needed to fetch songs from YouTube and for the one-time setup.</span></div>
+        <div class="req"><b id="req-os-b">Operating system</b><span id="req-os-span">macOS 12 or newer (Apple Silicon), or Windows 10 / 11</span></div>
+        <div class="req"><b id="req-first-b">First launch</b><span id="req-first-span">StemKit sets up its own engine, about 2GB, one time. Nothing to install by hand.</span></div>
+        <div class="req"><b id="req-disk-b">Disk space</b><span id="req-disk-span">About 2GB, downloaded once during setup.</span></div>
+        <div class="req"><b id="req-net-b">Internet</b><span id="req-net-span">Needed to fetch songs from YouTube and for the one-time setup.</span></div>
       </div>
     </section>
 
     <div class="end">
-      <h2>Free and open source. Runs entirely on your machine.</h2>
+      <h2 id="end-title">Free and open source. Runs entirely on your machine.</h2>
       <div class="cta">
         <a class="btn-dl" id="dl2" href="https://github.com/appletea6731gihub/stemkit/releases/latest" data-ga="download">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span id="dl2-label">Download</span>
         </a>
-        <a class="btn-ghost" href="https://github.com/appletea6731gihub/stemkit" target="_blank" rel="noopener" data-ga="github">Star on GitHub</a>
+        <a class="btn-ghost" id="star-btn" href="https://github.com/appletea6731gihub/stemkit" target="_blank" rel="noopener" data-ga="github">Star on GitHub</a>
       </div>
-      <p class="caption-note">no account needed · fully local processing</p>
+      <p class="caption-note" id="end-note">no account needed · fully local processing</p>
     </div>
 
     <footer>
-      <span class="note">© 2026 StemKit · MIT license · not affiliated with YouTube or Google</span>
+      <span class="note" id="footer-note">© 2026 StemKit · MIT license · not affiliated with YouTube or Google</span>
       <div class="links">
         <a href="https://github.com/appletea6731gihub/stemkit" target="_blank" rel="noopener" data-ga="github">GitHub</a>
         <a href="https://github.com/appletea6731gihub/stemkit/releases" target="_blank" rel="noopener" data-ga="releases">Releases</a>
@@ -443,7 +443,7 @@
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    var currentLang = localStorage.getItem('stemkit_lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+        var currentLang = localStorage.getItem('stemkit_lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
 
     var I18N = {
       en: {
@@ -468,12 +468,21 @@
         search_kicker: 'Search',
         search_title: 'Embedded YouTube search.',
         search_desc: 'Type a song, click the result, and the split starts in the background. You never open a browser tab.',
+        search_li1: 'Results appear while you type',
+        search_li2: 'One click sends it to split',
+        search_li3: 'No browser tab, ever',
         split_kicker: 'Split',
         split_title: 'Seamless stem splits by instrument.',
         split_desc: 'Pick vocals, drums, bass, other, plus guitar and piano. The split runs locally with live progress, and presets isolate each instrument while the playhead keeps moving.',
+        split_li1: 'Vocals, drums, bass, other',
+        split_li2: 'Guitar and piano when you need them',
+        split_li3: 'Live progress, runs locally',
         export_kicker: 'Export',
         export_title: 'Export straight into your DAW.',
         export_desc: 'Every stem exports as a standard WAV file — vocals, drums, bass, guitar, piano, or the full instrumental. Drop them into Ableton, Logic, FL Studio, GarageBand. No conversion, no fuss.',
+        export_li1: 'Any stem, or all of them at once',
+        export_li2: 'Standard WAV files',
+        export_li3: 'Works with any DAW',
         use1_title: 'Learn your instrument',
         use1_desc: 'Solo the guitar, bass or piano and pick out every note by ear.',
         use2_title: 'Play with a backing track',
@@ -484,21 +493,23 @@
         use4_desc: 'Strip the vocals from any song and the mic is yours.',
         req_kicker: 'System requirements',
         req_title: 'Before you install.',
-        req_os_title: 'Operating system',
-        req_os_desc: 'macOS 12 or newer (Apple Silicon), or Windows 10 / 11',
-        req_first_title: 'First launch',
-        req_first_desc: 'StemKit sets up its own engine, about 2GB, one time. Nothing to install by hand.',
-        req_disk_title: 'Disk space',
-        req_disk_desc: 'About 2GB, downloaded once during setup.',
-        req_net_title: 'Internet',
-        req_net_desc: 'Needed to fetch songs from YouTube and for the one-time setup.',
+        req_os_b: 'Operating system',
+        req_os_span: 'macOS 12 or newer (Apple Silicon), or Windows 10 / 11',
+        req_first_b: 'First launch',
+        req_first_span: 'StemKit sets up its own engine, about 2GB, one time. Nothing to install by hand.',
+        req_disk_b: 'Disk space',
+        req_disk_span: 'About 2GB, downloaded once during setup.',
+        req_net_b: 'Internet',
+        req_net_span: 'Needed to fetch songs from YouTube and for the one-time setup.',
         end_title: 'Free and open source. Runs entirely on your machine.',
-        end_note: 'no account needed · fully local processing'
+        star_btn: 'Star on GitHub',
+        end_note: 'no account needed · fully local processing',
+        footer_note: '© 2026 StemKit · MIT license · not affiliated with YouTube or Google'
       },
       zh: {
         toggle_btn: '🌐 English',
-        hero_title: '将任意 YouTube 歌曲精准拆解为<span class="grad">分轨</span>。',
-        hero_sub: '输入链接即可分离人声、鼓点、贝斯、吉他与键盘伴奏。毫秒级音画同步播放，一键消音伴奏/纯人声，完全免费开源，100% 本地运算。',
+        hero_title: '将任意 YouTube 歌曲精准拆解为<span class="grad">独立分轨</span>。',
+        hero_sub: '输入链接即可精准分离人声、鼓点、贝斯、吉他与键盘伴奏。毫秒级音画同步播放，一键消音伴奏/纯人声，完全免费开源，100% 本地运算。',
         dl_mac: '下载 macOS 原生版',
         dl_win: '下载 Windows 安装版',
         dl_generic: '立即下载 StemKit',
@@ -511,18 +522,27 @@
         step1_title: '粘贴链接或直接搜索',
         step1_desc: '内置 YouTube 快速检索，无需打开额外浏览器标签页，直接后台提取音视频。',
         step2_title: '自由勾选分离乐器',
-        step2_desc: '标准 4 轨分离（人声、鼓点、贝斯、伴奏），采用 Meta Demucs / Roformer 本地模型极速运算。',
+        step2_desc: '标准 4 轨分离（人声、鼓点、贝斯、伴奏）或扩展吉他/钢琴，采用前沿本地 AI 神经网络极速运算。',
         step3_title: '专业多轨混音、独奏与导出',
         step3_desc: '视频画面与独立分轨毫秒级对齐。可单独静音、独奏、调节音量，或一键导出无损 WAV 文件。',
         search_kicker: '搜索',
         search_title: '内置 YouTube 搜索。',
         search_desc: '输入歌名直接搜索视频，一键点击即刻在后台执行音频分离，不干扰其他创作。',
+        search_li1: '输入时实时显示搜索建议与结果',
+        search_li2: '点击任意结果立即在后台开启分离',
+        search_li3: '无需离开应用，不开启多余浏览器标签',
         split_kicker: '分离',
         split_title: '前沿 AI 本地高精分轨。',
-        split_desc: '支持人声、鼓点、贝斯及各种乐器独立轨道，实时显示百分比进度，Apple Silicon / NVIDIA GPU 硬件加速。',
+        split_desc: '支持人声、鼓点、贝斯及各种乐器独立轨道，实时显示百分比进度，Apple Silicon / 独立显卡硬件加速。',
+        split_li1: '人声、鼓点、贝斯及伴奏基础分轨',
+        split_li2: '按需自由提取吉他与钢琴独立轨',
+        split_li3: '实时进度显示，100% 本地隐私运算',
         export_kicker: '导出',
         export_title: '一键导出至专业编曲软件 (DAW)。',
         export_desc: '所有分轨均可直接导出为标准 32-bit / 16-bit WAV 无损音频，无缝拖入 Logic Pro、Ableton、FL Studio、剪映等工具。',
+        export_li1: '支持导出任意单轨或一键全部分轨打包',
+        export_li2: '高保真标准无损 WAV 格式',
+        export_li3: '完美兼容任意编曲宿主 (DAW)',
         use1_title: '乐器演奏扒带',
         use1_desc: '独奏吉他、贝斯或钢琴轨道，清晰听清每一个音符与和弦细节。',
         use2_title: '乐队伴奏练习',
@@ -533,38 +553,97 @@
         use4_desc: '一键抹去原唱人声，原版配器完美保留，麦克风随时就绪。',
         req_kicker: '系统要求',
         req_title: '安装前须知。',
-        req_os_title: '操作系统',
-        req_os_desc: 'macOS 12 或更高版本 (Apple Silicon M系列)，或 Windows 10 / 11 64位',
-        req_first_title: '首次启动',
-        req_first_desc: 'StemKit 首次启动自动初始化本地 AI 引擎（约 2GB，仅需一次），无需手动配置环境。',
-        req_disk_title: '磁盘空间',
-        req_disk_desc: '约需 2GB 空间用于存放模型权重与运行环境。',
-        req_net_title: '网络连接',
-        req_net_desc: '用于初次模型下载及获取 YouTube 音视频。',
+        req_os_b: '操作系统',
+        req_os_span: 'macOS 12 或更高版本 (Apple Silicon M系列)，或 Windows 10 / 11 64位',
+        req_first_b: '首次启动',
+        req_first_span: 'StemKit 首次启动自动初始化本地 AI 引擎（约 2GB，仅需一次），无需手动配置环境。',
+        req_disk_b: '磁盘空间',
+        req_disk_span: '约需 2GB 空间用于存放模型权重与运行环境。',
+        req_net_b: '网络连接',
+        req_net_span: '用于初次模型下载及获取 YouTube 音视频。',
         end_title: '免费开源。纯本地运行，保护隐私。',
-        end_note: '无需注册账号 · 100% 本地隐私安全'
+        star_btn: 'GitHub 点亮 Star',
+        end_note: '无需注册账号 · 100% 本地隐私安全',
+        footer_note: '© 2026 StemKit · MIT 开源协议 · 与 YouTube 或 Google 无从属关系'
       }
     };
 
+    function setEl(id, val, isHtml) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (isHtml) {
+        el.innerHTML = val;
+      } else {
+        el.textContent = val;
+      }
+    }
+
     function renderI18n() {
       var d = I18N[currentLang] || I18N.en;
-      var btn = document.getElementById('lang-btn');
-      if (btn) btn.textContent = d.toggle_btn;
-
-      var heroTitle = document.getElementById('hero-title');
-      if (heroTitle) heroTitle.innerHTML = d.hero_title;
-      var heroSub = document.getElementById('hero-sub');
-      if (heroSub) heroSub.textContent = d.hero_sub;
-
-      var allRel = document.getElementById('all-rel');
-      if (allRel) allRel.textContent = d.all_rel;
-
-      var macPill = document.getElementById('mac-link');
-      if (macPill) macPill.textContent = d.mac_pill;
-      var winPill = document.getElementById('win-link');
-      if (winPill) winPill.textContent = d.win_pill;
-      var zipPill = document.getElementById('zip-link');
-      if (zipPill) zipPill.textContent = d.zip_pill;
+      
+      setEl('lang-btn', d.toggle_btn);
+      setEl('hero-title', d.hero_title, true);
+      setEl('hero-sub', d.hero_sub);
+      setEl('all-rel', d.all_rel);
+      setEl('mac-link', d.mac_pill);
+      setEl('win-link', d.win_pill);
+      setEl('zip-link', d.zip_pill);
+      
+      setEl('how-kicker', d.how_kicker);
+      setEl('how-title', d.how_title);
+      setEl('step1-title', d.step1_title);
+      setEl('step1-desc', d.step1_desc);
+      setEl('step2-title', d.step2_title);
+      setEl('step2_desc', d.step2_desc);
+      setEl('step2-desc', d.step2_desc);
+      setEl('step3-title', d.step3_title);
+      setEl('step3-desc', d.step3_desc);
+      
+      setEl('search-kicker', d.search_kicker);
+      setEl('search-title', d.search_title);
+      setEl('search-desc', d.search_desc);
+      setEl('search-li1', d.search_li1);
+      setEl('search-li2', d.search_li2);
+      setEl('search-li3', d.search_li3);
+      
+      setEl('split-kicker', d.split_kicker);
+      setEl('split-title', d.split_title);
+      setEl('split-desc', d.split_desc);
+      setEl('split-li1', d.split_li1);
+      setEl('split-li2', d.split_li2);
+      setEl('split-li3', d.split_li3);
+      
+      setEl('export-kicker', d.export_kicker);
+      setEl('export-title', d.export_title);
+      setEl('export-desc', d.export_desc);
+      setEl('export-li1', d.export_li1);
+      setEl('export-li2', d.export_li2);
+      setEl('export-li3', d.export_li3);
+      
+      setEl('use1-title', d.use1_title);
+      setEl('use1-desc', d.use1_desc);
+      setEl('use2-title', d.use2_title);
+      setEl('use2-desc', d.use2_desc);
+      setEl('use3-title', d.use3_title);
+      setEl('use3-desc', d.use3_desc);
+      setEl('use4-title', d.use4_title);
+      setEl('use4-desc', d.use4_desc);
+      
+      setEl('req-kicker', d.req_kicker);
+      setEl('req-title', d.req_title);
+      setEl('req-os-b', d.req_os_b);
+      setEl('req-os-span', d.req_os_span);
+      setEl('req-first-b', d.req_first_b);
+      setEl('req-first-span', d.req_first_span);
+      setEl('req-disk-b', d.req_disk_b);
+      setEl('req-disk-span', d.req_disk_span);
+      setEl('req-net-b', d.req_net_b);
+      setEl('req-net-span', d.req_net_span);
+      
+      setEl('end-title', d.end_title);
+      setEl('star-btn', d.star_btn);
+      setEl('end-note', d.end_note);
+      setEl('footer-note', d.footer_note);
     }
 
     window.toggleLang = function () {
