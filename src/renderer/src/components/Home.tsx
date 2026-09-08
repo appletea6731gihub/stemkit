@@ -35,6 +35,7 @@ export function Home({
   onOpenSettings
 }: Props): React.ReactElement {
   const [query, setQuery] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
   const [selected, setSelected] = useState<Set<StemId>>(new Set<StemId>(DEFAULT_STEMS as StemId[]))
   const [results, setResults] = useState<SearchResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -87,11 +88,21 @@ export function Home({
   }
 
   const startWithSelection = (videoIdOrUrl: string): void => {
-    onStart(
-      videoIdOrUrl.startsWith('http') ? videoIdOrUrl : `https://www.youtube.com/watch?v=${videoIdOrUrl}`,
-      derivedModel,
-      orderedSelection
-    )
+    // If it's already a full URL or a local path or custom ID, pass directly
+    if (
+      videoIdOrUrl.startsWith('http://') ||
+      videoIdOrUrl.startsWith('https://') ||
+      videoIdOrUrl.startsWith('loc_') ||
+      videoIdOrUrl.startsWith('bi_') ||
+      videoIdOrUrl.startsWith('sc_') ||
+      videoIdOrUrl.startsWith('url_') ||
+      videoIdOrUrl.includes('/') ||
+      videoIdOrUrl.includes('\\')
+    ) {
+      onStart(videoIdOrUrl, derivedModel, orderedSelection)
+    } else {
+      onStart(`https://www.youtube.com/watch?v=${videoIdOrUrl}`, derivedModel, orderedSelection)
+    }
   }
 
   useEffect(() => {
@@ -150,14 +161,71 @@ export function Home({
     startWithSelection(r.videoId)
   }
 
+  const handleDrop = (e: React.DragEvent): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const firstFile = files[0]
+      // electron File object has a 'path' property
+      const filePath = (firstFile as unknown as { path?: string }).path || firstFile.name
+      if (filePath) {
+        startWithSelection(filePath)
+      }
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handlePickLocalFile = async (): Promise<void> => {
+    try {
+      const files = await window.stemkit.openFileDialog()
+      if (files && files.length > 0) {
+        startWithSelection(files[0])
+      }
+    } catch (err) {
+      console.error('Failed to open file dialog:', err)
+    }
+  }
+
   return (
-    <div className="h-full flex flex-col items-center px-8 pt-[8vh] pb-6 overflow-y-auto">
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`relative h-full flex flex-col items-center px-8 pt-[8vh] pb-6 overflow-y-auto transition-colors ${
+        isDragging ? 'bg-violet-950/30' : ''
+      }`}
+    >
+      {isDragging && (
+        <div className="absolute inset-4 z-50 rounded-3xl border-2 border-dashed border-violet-400 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none rise-in">
+          <div className="w-16 h-16 rounded-2xl bg-violet-500/20 text-violet-300 flex items-center justify-center mb-3">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <p className="text-lg font-semibold text-white">松开鼠标即可导入文件</p>
+          <p className="text-sm text-white/50 mt-1">支持 MP3, WAV, FLAC, M4A, AAC, MP4 等常见格式</p>
+        </div>
+      )}
+
       <div className="w-full max-w-2xl">
         <h1 className="text-center text-[30px] font-bold tracking-tight leading-tight bg-gradient-to-r from-violet-300 via-white to-emerald-200 bg-clip-text text-transparent">
           Turn any YouTube track into stems.
         </h1>
         <p className="text-center text-white/45 mt-2.5 text-[14px]">
-          Search YouTube or paste a link — separated locally, synced to the video.
+          支持 YouTube、B站、SoundCloud 链接，或直接拖拽导入本地音频与视频。
         </p>
 
         <div className="mt-6 flex gap-2">
@@ -166,10 +234,20 @@ export function Home({
             value={query}
             onChange={(e) => handleInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submit()}
-            placeholder="Search YouTube or paste a link…"
+            placeholder="粘贴 YouTube / B站 / SoundCloud 链接或本地文件路径…"
             spellCheck={false}
             className="no-drag flex-1 glass rounded-xl px-4 py-3 text-sm outline-none placeholder:text-white/25 focus:ring-2 focus:ring-violet-400/60 transition-shadow"
           />
+          <button
+            onClick={handlePickLocalFile}
+            title="选择本地音频/视频文件"
+            className="no-drag px-3.5 rounded-xl glass hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium transition-all flex items-center gap-1.5 shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span>本地文件</span>
+          </button>
           <button
             onClick={submit}
             disabled={!query.trim() || selected.size === 0}

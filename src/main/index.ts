@@ -333,6 +333,29 @@ async function exportAudioFile(
     return { saved: true, path: target, count }
   })
 
+  ipcMain.handle('dialog:open-audio-file', async () => {
+    const result = await dialog.showOpenDialog({
+      title: '选择本地音频或视频文件',
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        {
+          name: '音频与视频文件 (Audio & Video)',
+          extensions: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'opus', 'mp4', 'mkv', 'webm', 'mov', 'avi']
+        },
+        {
+          name: '音频文件 (Audio Only)',
+          extensions: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'opus', 'wma', 'alac', 'aiff']
+        },
+        {
+          name: '所有文件 (All Files)',
+          extensions: ['*']
+        }
+      ]
+    })
+    if (result.canceled || !result.filePaths.length) return null
+    return result.filePaths
+  })
+
   ipcMain.handle('search:youtube', (_e, query: string) => searchYouTube(query))
   ipcMain.handle('app:version', () => app.getVersion())
   ipcMain.handle('settings:get', () => loadSettings())

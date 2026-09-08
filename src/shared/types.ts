@@ -130,6 +130,7 @@ export interface StemKitApi {
   getThumb(videoId: string): Promise<string | null>
   enginesStatus(): Promise<EngineStatus>
   fetchEngine(which: 'vocals' | 'ft' | 'gpu'): Promise<void>
+  openFileDialog(): Promise<string[] | null>
   onUpdateEvent(cb: (ev: UpdateEvent) => void): () => void
   onJobEvent(cb: (ev: JobEvent) => void): () => void
   onEnvEvent(cb: (ev: EnvEvent) => void): () => void

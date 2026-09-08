@@ -30,6 +30,7 @@ const api: StemKitApi = {
   getThumb: (videoId) => ipcRenderer.invoke('thumb:get', videoId),
   enginesStatus: () => ipcRenderer.invoke('engines:status'),
   fetchEngine: (which) => ipcRenderer.invoke('engines:fetch', which),
+  openFileDialog: () => ipcRenderer.invoke('dialog:open-audio-file'),
   onUpdateEvent: (cb) => subscribe<UpdateEvent>('update:event', cb),
   onJobEvent: (cb) => subscribe<JobEvent>('job:event', cb),
   onEnvEvent: (cb) => subscribe<EnvEvent>('env:event', cb),

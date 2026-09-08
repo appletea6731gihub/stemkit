@@ -18,7 +18,8 @@ export function thumbPath(videoId: string): string {
   return join(thumbsDir(), `${videoId}.jpg`)
 }
 
-const VALID_ID = /^[\w-]{11}$/
+// allow standard YouTube 11-char IDs, or prefixed IDs like bi_..., loc_..., sc_..., url_...
+const VALID_ID = /^([\w-]{11}|(?:loc|bi|sc|url)_[\w-]{6,30})$/
 
 function toDataUrl(buf: Buffer): string {
   return `data:image/jpeg;base64,${buf.toString('base64')}`

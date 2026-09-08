@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from 'child_process'
 import { createInterface } from 'readline'
-import { readdirSync, mkdirSync, rmSync } from 'fs'
-import { join } from 'path'
+import { readdirSync, mkdirSync, rmSync, existsSync } from 'fs'
+import { join, basename, extname } from 'path'
 import { BrowserWindow } from 'electron'
 import {
   venvPython,
@@ -29,7 +29,7 @@ import {
 } from './library'
 import type { JobEvent, JobStage } from '../shared/types'
 import { MODEL_DEFAULT, MODEL_EXTENDED, MODEL_STUDIO, DEFAULT_STEMS } from '../shared/types'
-import { parseVideoId } from '../shared/url'
+import { parseMediaSource, parseVideoId } from '../shared/url'
 import { track } from './analytics'
 import { cacheThumbnail } from './thumbs'
 
@@ -94,13 +94,14 @@ export async function startJob(
   stems?: string[]
 ): Promise<void> {
   const url = rawUrl.trim()
-  const videoId = parseVideoId(url)
-  if (!videoId) {
-    send({ kind: 'failed', data: { videoId: '', message: 'Could not parse a YouTube URL or video id out of that' } })
+  const parsedSource = parseMediaSource(url)
+  const videoId = parsedSource?.id ?? parseVideoId(url)
+  if (!videoId || !parsedSource) {
+    send({ kind: 'failed', data: { videoId: '', message: '无法解析输入内容，支持 YouTube/B站/SoundCloud 链接或本地音视频文件' } })
     return
   }
   if (jobs.has(videoId)) {
-    send({ kind: 'failed', data: { videoId, message: 'This song is already being processed' } })
+    send({ kind: 'failed', data: { videoId, message: '该曲目正在处理中，请稍候' } })
     return
   }
 
@@ -163,117 +164,157 @@ export async function startJob(
       gpu: useGpu
     })
     mkdirSync(songDir(videoId), { recursive: true })
-    progress(job, 'metadata', 0, 'Reading video info')
 
-    let raw = ''
-    try {
-      await runProcess(job, venvYtDlp(), [...ytDlpRuntimeArgs(), '-J', '--no-playlist', '--skip-download', url], {
-        onStdout: (chunk) => {
-          raw += chunk
-        }
-      })
-    } catch (err) {
-      const args = ytDlpRuntimeArgs()
-      const cookieIdx = args.indexOf('--cookies-from-browser')
-      if (cookieIdx !== -1) {
-        raw = ''
-        const fallbackArgs = args.filter((_, i) => i !== cookieIdx && i !== cookieIdx + 1)
-        await runProcess(job, venvYtDlp(), [...fallbackArgs, '-J', '--no-playlist', '--skip-download', url], {
+    const ffmpeg = getStatus().ffmpeg.path
+    if (!ffmpeg) bail('内置音视频处理工具 (ffmpeg) 缺失，请检查或重新安装 StemKit。')
+
+    if (parsedSource.isLocal) {
+      // Local audio/video fast-path: bypass yt-dlp download entirely
+      const localPath = parsedSource.normalizedUrl
+      if (!existsSync(localPath)) {
+        bail(`本地文件不存在或无法访问: ${localPath}`)
+      }
+      const fileName = basename(localPath, extname(localPath))
+      job.title = fileName || '本地曲目'
+      progress(job, 'metadata', 100, job.title)
+
+      progress(job, 'convert', 0, '正在将本地媒体规格化转换为 WAV 格式…')
+      // Run ffmpeg directly on local file to produce mix.wav
+      await runProcess(job, ffmpeg as string, [
+        '-y',
+        '-i',
+        localPath,
+        '-af',
+        'aresample=44100',
+        '-ar',
+        '44100',
+        '-ac',
+        '2',
+        '-c:a',
+        'pcm_s16le',
+        mixWavPath(videoId)
+      ])
+      if (job.cancelled || !jobs.has(videoId)) return
+      progress(job, 'convert', 100)
+    } else {
+      // Remote URL pipeline (YouTube, Bilibili, SoundCloud, Direct URL)
+      progress(job, 'metadata', 0, '正在读取媒体元数据…')
+
+      const extraYtDlpArgs: string[] = []
+      if (parsedSource.type === 'bilibili') {
+        extraYtDlpArgs.push('--referer', 'https://www.bilibili.com')
+        extraYtDlpArgs.push('--user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+      }
+
+      let raw = ''
+      try {
+        await runProcess(job, venvYtDlp(), [...ytDlpRuntimeArgs(), ...extraYtDlpArgs, '-J', '--no-playlist', '--skip-download', parsedSource.normalizedUrl], {
           onStdout: (chunk) => {
             raw += chunk
           }
         })
-      } else {
-        throw err
+      } catch (err) {
+        const args = ytDlpRuntimeArgs()
+        const cookieIdx = args.indexOf('--cookies-from-browser')
+        if (cookieIdx !== -1) {
+          raw = ''
+          const fallbackArgs = args.filter((_, i) => i !== cookieIdx && i !== cookieIdx + 1)
+          await runProcess(job, venvYtDlp(), [...fallbackArgs, ...extraYtDlpArgs, '-J', '--no-playlist', '--skip-download', parsedSource.normalizedUrl], {
+            onStdout: (chunk) => {
+              raw += chunk
+            }
+          })
+        } else {
+          throw err
+        }
       }
-    }
-    let meta: { title: string; duration: number }
-    try {
-      const parsed = JSON.parse(raw)
-      meta = {
-        title: typeof parsed.title === 'string' ? parsed.title : 'Unknown title',
-        duration: typeof parsed.duration === 'number' ? Math.round(parsed.duration) : 0
+      let meta: { title: string; duration: number }
+      try {
+        const parsed = JSON.parse(raw)
+        meta = {
+          title: typeof parsed.title === 'string' ? parsed.title : '未知曲目',
+          duration: typeof parsed.duration === 'number' ? Math.round(parsed.duration) : 0
+        }
+        // warm the thumbnail cache for offline library browsing
+        void cacheThumbnail(videoId, typeof parsed.thumbnail === 'string' ? parsed.thumbnail : undefined)
+      } catch {
+        bail('无法读取媒体元数据，请检查网络或链接是否有效')
       }
-      // warm the thumbnail cache for offline library browsing
-      void cacheThumbnail(videoId, typeof parsed.thumbnail === 'string' ? parsed.thumbnail : undefined)
-    } catch {
-      bail('Could not read video metadata')
-    }
-    if (job.cancelled || !jobs.has(videoId)) return
-    job.title = meta!.title
-    progress(job, 'metadata', 100, meta!.title)
+      if (job.cancelled || !jobs.has(videoId)) return
+      job.title = meta!.title
+      progress(job, 'metadata', 100, meta!.title)
 
-    progress(job, 'download', 0, 'Downloading audio from YouTube')
-    let maxPct = 0
-    const executeDownload = async (runtimeArgs: string[]): Promise<void> => {
-      await runProcess(
-        job,
-        venvYtDlp(),
-        [
-          ...runtimeArgs,
-          '-f',
-          'bestaudio/best',
-          '--no-playlist',
-          '-o',
-          rawDownloadPath(videoId),
-          url
-        ],
-        {
-          onStdout: (chunk) => {
-            for (const piece of chunk.split(/[\r\n]/)) {
-              const m = piece.match(/(\d+(?:\.\d+)?)%/)
-              if (m) {
-                const pct = parseFloat(m[1])
-                if (pct > maxPct && pct <= 100) {
-                  maxPct = pct
-                  progress(job, 'download', pct)
+      progress(job, 'download', 0, '正在下载音频流…')
+      let maxPct = 0
+      const executeDownload = async (runtimeArgs: string[]): Promise<void> => {
+        await runProcess(
+          job,
+          venvYtDlp(),
+          [
+            ...runtimeArgs,
+            ...extraYtDlpArgs,
+            '-f',
+            'bestaudio/best',
+            '--no-playlist',
+            '-o',
+            rawDownloadPath(videoId),
+            parsedSource.normalizedUrl
+          ],
+          {
+            onStdout: (chunk) => {
+              for (const piece of chunk.split(/[\r\n]/)) {
+                const m = piece.match(/(\d+(?:\.\d+)?)%/)
+                if (m) {
+                  const pct = parseFloat(m[1])
+                  if (pct > maxPct && pct <= 100) {
+                    maxPct = pct
+                    progress(job, 'download', pct)
+                  }
                 }
               }
             }
           }
-        }
-      )
-    }
-
-    try {
-      await executeDownload(ytDlpRuntimeArgs())
-    } catch (err) {
-      const args = ytDlpRuntimeArgs()
-      const cookieIdx = args.indexOf('--cookies-from-browser')
-      if (cookieIdx !== -1) {
-        const fallbackArgs = args.filter((_, i) => i !== cookieIdx && i !== cookieIdx + 1)
-        await executeDownload(fallbackArgs)
-      } else {
-        throw err
+        )
       }
+
+      try {
+        await executeDownload(ytDlpRuntimeArgs())
+      } catch (err) {
+        const args = ytDlpRuntimeArgs()
+        const cookieIdx = args.indexOf('--cookies-from-browser')
+        if (cookieIdx !== -1) {
+          const fallbackArgs = args.filter((_, i) => i !== cookieIdx && i !== cookieIdx + 1)
+          await executeDownload(fallbackArgs)
+        } else {
+          throw err
+        }
+      }
+      if (job.cancelled || !jobs.has(videoId)) return
+
+      const dir = songDir(videoId)
+      const rawFile = readdirSync(dir).find((f) => f.startsWith('raw.'))
+      if (!rawFile) bail('媒体下载未能生成有效文件')
+      const rawPath = join(dir, rawFile as string)
+
+      progress(job, 'convert', 0, '正在将音频规格化转换为 44.1kHz WAV 格式…')
+      await runProcess(job, ffmpeg as string, [
+        '-y',
+        '-i',
+        rawPath,
+        '-af',
+        'aresample=44100',
+        '-ar',
+        '44100',
+        '-ac',
+        '2',
+        '-c:a',
+        'pcm_s16le',
+        mixWavPath(videoId)
+      ])
+      rmSync(rawPath, { force: true })
+      if (job.cancelled || !jobs.has(videoId)) return
+      progress(job, 'convert', 100)
     }
-    if (job.cancelled || !jobs.has(videoId)) return
-
-    const dir = songDir(videoId)
-    const rawFile = readdirSync(dir).find((f) => f.startsWith('raw.'))
-    if (!rawFile) bail('Download produced no file')
-    const rawPath = join(dir, rawFile as string)
-
-    progress(job, 'convert', 0, 'Converting to WAV')
-    const ffmpeg = getStatus().ffmpeg.path
-    if (!ffmpeg) bail('Something went wrong with the built-in audio tools. Try reinstalling StemKit.')
-    await runProcess(job, ffmpeg as string, [
-      '-y',
-      '-i',
-      rawPath,
-      '-af',
-      'aresample=44100',
-      '-ar',
-      '44100',
-      '-ac',
-      '2',
-      '-c:a',
-      'pcm_s16le',
-      mixWavPath(videoId)
-    ])
-    rmSync(rawPath, { force: true })
-    if (job.cancelled || !jobs.has(videoId)) return
-    progress(job, 'convert', 100)
 
     mkdirSync(stemsDir(videoId), { recursive: true })
     progress(job, 'separate', 0, 'Waiting for a free engine slot…')

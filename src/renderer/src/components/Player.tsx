@@ -301,17 +301,35 @@ export function Player({ song, settings }: Props): React.ReactElement {
                     )}
                   </div>
 
-                  {/* Open in YouTube button top right */}
-                  <button
-                    onClick={() => {
-                      void window.stemkit.openExternal(`https://www.youtube.com/watch?v=${song.videoId}`)
-                    }}
-                    className="no-drag absolute top-3.5 right-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/10 text-white/70 hover:text-white text-[11px] font-medium transition-all shadow-md opacity-80 hover:opacity-100"
-                    title="在 YouTube 中打开原视频"
-                  >
-                    <ExternalIcon className="w-3.5 h-3.5" />
-                    <span>YouTube</span>
-                  </button>
+                  {/* Open in external provider if applicable */}
+                  {song.videoId.startsWith('bi_') ? (
+                    <button
+                      onClick={() => {
+                        const bvid = song.videoId.replace(/^bi_/, '')
+                        void window.stemkit.openExternal(`https://www.bilibili.com/video/${bvid}`)
+                      }}
+                      className="no-drag absolute top-3.5 right-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/10 text-white/70 hover:text-white text-[11px] font-medium transition-all shadow-md opacity-80 hover:opacity-100"
+                      title="在 Bilibili 中打开原视频"
+                    >
+                      <ExternalIcon className="w-3.5 h-3.5" />
+                      <span>Bilibili</span>
+                    </button>
+                  ) : song.videoId.startsWith('loc_') ? (
+                    <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-emerald-300 text-[11px] font-medium shadow-md">
+                      <span>本地媒体</span>
+                    </div>
+                  ) : !song.videoId.startsWith('url_') && !song.videoId.startsWith('sc_') ? (
+                    <button
+                      onClick={() => {
+                        void window.stemkit.openExternal(`https://www.youtube.com/watch?v=${song.videoId}`)
+                      }}
+                      className="no-drag absolute top-3.5 right-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/10 text-white/70 hover:text-white text-[11px] font-medium transition-all shadow-md opacity-80 hover:opacity-100"
+                      title="在 YouTube 中打开原视频"
+                    >
+                      <ExternalIcon className="w-3.5 h-3.5" />
+                      <span>YouTube</span>
+                    </button>
+                  ) : null}
 
                   {decodeError && (
                     <div className="absolute inset-x-3 bottom-3 flex justify-center rise-in">
