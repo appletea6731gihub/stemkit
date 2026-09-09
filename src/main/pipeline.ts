@@ -168,6 +168,8 @@ export async function startJob(
     const ffmpeg = getStatus().ffmpeg.path
     if (!ffmpeg) bail('内置音视频处理工具 (ffmpeg) 缺失，请检查或重新安装 StemKit。')
 
+    let meta: { title: string; duration: number } = { title: '未知曲目', duration: 0 }
+
     if (parsedSource.isLocal) {
       // Local audio/video fast-path: bypass yt-dlp download entirely
       const localPath = parsedSource.normalizedUrl
@@ -175,7 +177,8 @@ export async function startJob(
         bail(`本地文件不存在或无法访问: ${localPath}`)
       }
       const fileName = basename(localPath, extname(localPath))
-      job.title = fileName || '本地曲目'
+      meta.title = fileName || '本地曲目'
+      job.title = meta.title
       progress(job, 'metadata', 100, job.title)
 
       progress(job, 'convert', 0, '正在将本地媒体规格化转换为 WAV 格式…')
@@ -228,7 +231,6 @@ export async function startJob(
           throw err
         }
       }
-      let meta: { title: string; duration: number }
       try {
         const parsed = JSON.parse(raw)
         meta = {
@@ -241,8 +243,8 @@ export async function startJob(
         bail('无法读取媒体元数据，请检查网络或链接是否有效')
       }
       if (job.cancelled || !jobs.has(videoId)) return
-      job.title = meta!.title
-      progress(job, 'metadata', 100, meta!.title)
+      job.title = meta.title
+      progress(job, 'metadata', 100, meta.title)
 
       progress(job, 'download', 0, '正在下载音频流…')
       let maxPct = 0
