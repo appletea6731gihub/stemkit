@@ -43,3 +43,4 @@ win:
 nsis:
   oneClick: true
   perMachine: false
+  artifactName: ${productName}-Setup-${version}.${ext}
